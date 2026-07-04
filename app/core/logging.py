@@ -1,5 +1,6 @@
 import logging
 import time
+import uuid
 
 from pythonjsonlogger import jsonlogger
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -26,12 +27,15 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         logger = logging.getLogger("local_llm.request")
         start = time.perf_counter()
+        request_id = request.headers.get("X-Request-Id") or str(uuid.uuid4())
+        request.state.request_id = request_id
         try:
             response = await call_next(request)
             duration_ms = round((time.perf_counter() - start) * 1000, 2)
             logger.info(
                 "request_completed",
                 extra={
+                    "request_id": request_id,
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": response.status_code,
@@ -39,12 +43,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 },
             )
             response.headers["X-Process-Time-Ms"] = str(duration_ms)
+            response.headers["X-Request-Id"] = request_id
             return response
         except Exception:
             duration_ms = round((time.perf_counter() - start) * 1000, 2)
             logger.exception(
                 "request_failed",
                 extra={
+                    "request_id": request_id,
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": 500,

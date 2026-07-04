@@ -123,6 +123,8 @@ Resposta esperada:
 - `POST /v1/models/pull`
 - `GET /v1/models/status?model=...`
 - `GET /health`
+- `GET /health/live`
+- `GET /health/ready`
 
 ### Exemplo Chat Completion
 
@@ -191,9 +193,47 @@ docker compose up --build -d
 ## Logs e Seguranca
 
 - Logs estruturados JSON
+- Correlation ID por request (`X-Request-Id`)
 - Suporte opcional a API Key (`Authorization: Bearer <key>` ou `X-API-Key`)
 - CORS configuravel
 - Rate limit em memoria (opcional)
+
+## Contrato de Erro
+
+Erros da API sao retornados no formato padrao:
+
+```json
+{
+  "error": {
+    "message": "Model 'string' not found in Ollama.",
+    "type": "local_llm_error",
+    "code": "bad_request",
+    "request_id": "uuid",
+    "path": "/ask",
+    "timestamp": "2026-01-01T00:00:00+00:00"
+  }
+}
+```
+
+## Roadmap de Sprints
+
+### Sprint 1 (concluida)
+
+- Error envelope padronizado em todos os handlers globais
+- Correlation ID por request com header de resposta `X-Request-Id`
+- Endpoints operacionais `GET /health/live` e `GET /health/ready`
+
+### Sprint 2 (proxima)
+
+- Cache de status/lista de modelos com invalidação simples
+- Timeouts por operacao de provider e fallback de erro mais especifico
+- Testes de contrato OpenAPI para `/ask` e `/v1/chat/completions`
+
+### Sprint 3
+
+- Metricas Prometheus (latencia, taxa de erro, requests, tokens)
+- Limites de concorrencia por endpoint para proteger Ollama
+- Pipeline CI com validação de schema OpenAPI e smoke tests HTTP
 
 ## Testes
 

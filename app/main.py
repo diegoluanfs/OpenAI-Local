@@ -1,7 +1,8 @@
 import asyncio
+from datetime import datetime, timezone
 import logging
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -18,6 +19,30 @@ def _parse_cors(origins: str) -> list[str]:
     if origins.strip() == "*":
         return ["*"]
     return [origin.strip() for origin in origins.split(",") if origin.strip()]
+
+
+def _error_response(
+    request: Request,
+    status_code: int,
+    message: str,
+    error_type: str,
+    code: str,
+    details: list[dict] | None = None,
+) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", None)
+    payload = {
+        "error": {
+            "message": message,
+            "type": error_type,
+            "code": code,
+            "request_id": request_id,
+            "path": request.url.path,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    }
+    if details:
+        payload["error"]["details"] = details
+    return JSONResponse(status_code=status_code, content=payload)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -52,18 +77,59 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     logger = logging.getLogger("local_llm.app")
 
     @app.exception_handler(LocalLLMError)
-    async def local_llm_error_handler(_: Request, exc: LocalLLMError):
+    async def local_llm_error_handler(request: Request, exc: LocalLLMError):
         logger.exception("domain_error")
-        return JSONResponse(
+        return _error_response(
+            request=request,
             status_code=status.HTTP_400_BAD_REQUEST,
-            content={"error": {"message": str(exc), "type": "local_llm_error", "code": "bad_request"}},
+            message=str(exc),
+            error_type="local_llm_error",
+            code="bad_request",
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_error_handler(_: Request, exc: RequestValidationError):
-        return JSONResponse(
+    async def validation_error_handler(request: Request, exc: RequestValidationError):
+        return _error_response(
+            request=request,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"error": {"message": "Validation failed", "type": "invalid_request_error", "details": exc.errors()}},
+            message="Validation failed",
+            error_type="invalid_request_error",
+            code="validation_error",
+            details=exc.errors(),
+        )
+
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException):
+        detail = exc.detail
+        if isinstance(detail, dict):
+            message = str(detail.get("message", "Request failed"))
+            error_type = str(detail.get("type", "http_error"))
+            code = str(detail.get("code", "http_error"))
+            details = detail.get("details")
+        else:
+            message = str(detail)
+            error_type = "http_error"
+            code = "http_error"
+            details = None
+
+        return _error_response(
+            request=request,
+            status_code=exc.status_code,
+            message=message,
+            error_type=error_type,
+            code=code,
+            details=details,
+        )
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, _: Exception):
+        logger.exception("unhandled_error")
+        return _error_response(
+            request=request,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Internal server error",
+            error_type="internal_server_error",
+            code="internal_error",
         )
 
     @app.on_event("startup")
