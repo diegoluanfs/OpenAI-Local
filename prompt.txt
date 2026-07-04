@@ -1,0 +1,254 @@
+Você é um Arquiteto de Software Sênior especialista em Python, FastAPI, Docker, APIs REST e Inteligência Artificial Generativa.
+
+Desenvolva uma aplicação completa chamada **Local LLM Server**.
+
+## Objetivo
+
+Criar um servidor de Inteligência Artificial executado 100% localmente, capaz de disponibilizar modelos de linguagem (LLMs) através de uma API REST compatível com a OpenAI.
+
+O objetivo é permitir que qualquer aplicação desenvolvida por mim (.NET, Python, Node.js, React, etc.) possa consumir uma IA local exatamente como consumiria a API da OpenAI, bastando alterar a Base URL da conexão.
+
+Toda a solução deve funcionar completamente offline após a instalação dos modelos.
+
+---
+
+## Requisitos
+
+A aplicação deverá:
+
+- Executar modelos locais utilizando Ollama.
+- Disponibilizar uma API REST.
+- Ser compatível, sempre que possível, com a API da OpenAI.
+- Permitir que qualquer aplicação externa utilize a IA sem conhecer o Ollama.
+- Possuir arquitetura desacoplada para permitir substituir futuramente o Ollama por outro provedor (LM Studio, vLLM, llama.cpp, etc.).
+- Funcionar integralmente em Docker.
+
+---
+
+## Arquitetura
+
+Utilizar:
+
+- Clean Architecture
+- SOLID
+- Repository Pattern
+- Service Layer
+- Dependency Injection
+- Código modular
+- Type Hints
+- Configuração por variáveis de ambiente (.env)
+
+O código deve ser organizado como um software preparado para produção.
+
+---
+
+## Funcionalidades
+
+### Chat
+
+Criar endpoint compatível com:
+
+POST /v1/chat/completions
+
+Suportar:
+
+- mensagens
+- system prompt
+- conversation history
+- temperatura
+- max tokens
+- streaming
+- escolha do modelo
+
+---
+
+### Text Generation
+
+Criar endpoint:
+
+POST /v1/completions
+
+---
+
+### Embeddings
+
+Criar endpoint:
+
+POST /v1/embeddings
+
+Utilizar modelos de embedding instalados no Ollama.
+
+---
+
+### Modelos
+
+Permitir:
+
+- listar modelos instalados
+- obter modelo padrão
+- alterar modelo padrão
+- verificar disponibilidade do modelo
+- baixar modelos automaticamente (opcional)
+- carregar modelos sob demanda
+
+Endpoints sugeridos:
+
+GET /v1/models
+
+GET /v1/models/default
+
+PUT /v1/models/default
+
+POST /v1/models/pull
+
+GET /v1/models/status
+
+---
+
+### Health
+
+Criar:
+
+GET /health
+
+Retornando:
+
+- API Online
+- Ollama Online
+- Modelo padrão
+- Uso de memória
+- Tempo de atividade
+
+---
+
+### Configuração
+
+Toda configuração deverá utilizar variáveis de ambiente.
+
+Exemplo:
+
+HOST
+
+PORT
+
+OLLAMA_URL
+
+DEFAULT_MODEL
+
+LOG_LEVEL
+
+API_KEY (opcional)
+
+TIMEOUT
+
+---
+
+### Logs
+
+Implementar logs estruturados.
+
+Registrar:
+
+- requisição
+- modelo utilizado
+- tempo de resposta
+- erros
+- consumo de tokens (quando disponível)
+
+---
+
+### Segurança
+
+Implementar suporte opcional para:
+
+- API Key
+- CORS
+- Rate Limit
+- Autenticação desabilitada por padrão
+
+---
+
+### Docker
+
+Todo o ambiente deverá subir utilizando Docker Compose.
+
+Containers:
+
+- local-llm-server
+- ollama
+
+Persistir os modelos utilizando volumes Docker.
+
+Ao iniciar o ambiente pela primeira vez, o sistema deverá ser capaz de instalar automaticamente o modelo padrão configurado.
+
+---
+
+## Documentação
+
+Gerar automaticamente:
+
+- Swagger
+- OpenAPI
+- README completo
+
+O README deverá conter:
+
+- instalação
+- configuração
+- utilização
+- exemplos
+- Docker
+- troca de modelos
+- atualização
+
+---
+
+## Compatibilidade
+
+A API deve seguir o padrão da OpenAI sempre que possível.
+
+Um projeto que atualmente utiliza:
+
+https://api.openai.com/v1
+
+deverá conseguir utilizar:
+
+http://localhost:8000/v1
+
+alterando apenas a Base URL e, quando necessário, a API Key.
+
+As estruturas de Request e Response devem ser compatíveis com a OpenAI.
+
+---
+
+## Exemplos
+
+Criar exemplos completos de integração em:
+
+- C#
+- Python
+- Node.js
+
+demonstrando como trocar apenas a URL da API.
+
+---
+
+## Qualidade
+
+Implementar:
+
+- tratamento global de exceções
+- validações
+- tipagem completa
+- organização por camadas
+- testes unitários
+- testes de integração
+- documentação do código
+
+---
+
+## Objetivo Final
+
+O resultado deverá ser um servidor de IA local, leve, reutilizável e independente, que funcione como um substituto da API da OpenAI para desenvolvimento, testes e ambientes offline.
+
+A arquitetura deve permitir, no futuro, adicionar novos provedores de modelos (como Ollama, LM Studio, llama.cpp, vLLM ou OpenAI) sem alterar os clientes que consomem a API.
