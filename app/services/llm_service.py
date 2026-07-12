@@ -201,7 +201,9 @@ class LLMService:
         return await self._models.set_default_model(model)
 
     async def pull_model(self, model: str) -> dict[str, Any]:
-        return await self._provider.pull_model(model)
+        result = await self._provider.pull_model(model)
+        self._models.invalidate_models_cache()
+        return result
 
     def _extract_usage(self, response: dict[str, Any]) -> dict[str, int]:
         prompt = int(response.get("prompt_eval_count", 0) or 0)

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 
-from app.api.dependencies import get_llm_service
+from app.api.dependencies import get_llm_service, validate_api_key
 from app.schemas.openai import AskRequest, AskResponse
 
-router = APIRouter(prefix="", tags=["public"])
+router = APIRouter(prefix="", tags=["public"], dependencies=[Depends(validate_api_key)])
 
 
 @router.post("/ask")

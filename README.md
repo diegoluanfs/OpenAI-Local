@@ -71,6 +71,8 @@ Variaveis suportadas:
 - `CORS_ORIGINS` (padrao: `*`)
 - `RATE_LIMIT_PER_MINUTE` (padrao: `0`, desabilitado)
 - `AUTO_PULL_DEFAULT_MODEL` (padrao: `true`)
+- `ALLOWED_API_KEYS` (padrao: 10 chaves estaticas locais)
+- `UNAUTH_RATE_LIMIT_PER_MINUTE` (padrao: `30`)
 
 ## Uso
 
@@ -195,6 +197,9 @@ docker compose up --build -d
 - Logs estruturados JSON
 - Correlation ID por request (`X-Request-Id`)
 - Suporte opcional a API Key (`Authorization: Bearer <key>` ou `X-API-Key`)
+- Lista estatica de 10 API Keys para autorizacao (`ALLOWED_API_KEYS`)
+- Suporte a API Key via `Authorization: Bearer <key>` ou `X-API-Key`
+- Requisicoes sem API key sao permitidas, mas limitadas por `UNAUTH_RATE_LIMIT_PER_MINUTE`
 - CORS configuravel
 - Rate limit em memoria (opcional)
 
@@ -228,6 +233,19 @@ Erros da API sao retornados no formato padrao:
 - Cache de status/lista de modelos com invalidação simples
 - Timeouts por operacao de provider e fallback de erro mais especifico
 - Testes de contrato OpenAPI para `/ask` e `/v1/chat/completions`
+
+Status atual da Sprint 2:
+
+- Implementado cache de modelos com TTL (`MODEL_CACHE_TTL_SECONDS`) e invalidação apos `POST /v1/models/pull`
+- Implementados timeouts por operacao no provider Ollama:
+  - `TIMEOUT_TAGS_SECONDS`
+  - `TIMEOUT_CHAT_SECONDS`
+  - `TIMEOUT_GENERATE_SECONDS`
+  - `TIMEOUT_EMBEDDINGS_SECONDS`
+  - `TIMEOUT_PULL_SECONDS` (0 = sem timeout)
+- Implementados testes de contrato:
+  - `tests/integration/test_contracts.py`
+  - `tests/unit/test_model_repository_cache.py`
 
 ### Sprint 3
 

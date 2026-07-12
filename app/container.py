@@ -13,9 +13,21 @@ class AppContainer:
         self.settings = settings
         self.started_at = time.time()
 
-        ollama_client = OllamaClient(settings.ollama_url, settings.timeout_seconds)
+        ollama_client = OllamaClient(
+            base_url=settings.ollama_url,
+            timeout_seconds=settings.timeout_seconds,
+            timeout_tags_seconds=settings.timeout_tags_seconds,
+            timeout_chat_seconds=settings.timeout_chat_seconds,
+            timeout_generate_seconds=settings.timeout_generate_seconds,
+            timeout_embeddings_seconds=settings.timeout_embeddings_seconds,
+            timeout_pull_seconds=settings.timeout_pull_seconds,
+        )
         self.provider = OllamaProvider(ollama_client)
-        self.models = InMemoryModelRepository(self.provider, settings.default_model)
+        self.models = InMemoryModelRepository(
+            self.provider,
+            settings.default_model,
+            cache_ttl_seconds=settings.model_cache_ttl_seconds,
+        )
         self.llm_service = LLMService(self.provider, self.models, settings.embedding_model)
         self.health_service = HealthService(self.provider, self.models, self.started_at)
 
