@@ -19,11 +19,11 @@
         <h1>Ask your local model.</h1>
         <p class="muted">A focused console for private conversations running on your machine.</p>
         <label for="model">Model</label>
-        <select id="model"><option value="">Loading models...</option></select>
+        <div class="field-row"><select id="model"><option value="">Loading models...</option></select><button id="refresh-models" class="icon-button" type="button" title="Refresh models" aria-label="Refresh models">↻</button></div>
         <label for="api-key">API key <span>(optional)</span></label>
         <input id="api-key" type="password" placeholder="X-API-Key">
         <button id="clear-button" class="secondary" type="button">Clear conversation</button>
-        <div class="status-card"><span>Provider</span><strong id="provider-status">Ollama</strong><span>Default model</span><strong id="default-model">Loading...</strong></div>
+        <div class="status-card"><span>Provider</span><strong id="provider-status">Ollama</strong><span>Default model</span><strong id="default-model">Loading...</strong><span>Memory</span><strong id="memory-status">—</strong></div>
       </aside>
 
       <section class="chat-panel">

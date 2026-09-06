@@ -9,6 +9,8 @@ const healthDot = document.querySelector('#health-dot');
 const healthText = document.querySelector('#health-text');
 const providerStatus = document.querySelector('#provider-status');
 const defaultModel = document.querySelector('#default-model');
+const memoryStatus = document.querySelector('#memory-status');
+const refreshModels = document.querySelector('#refresh-models');
 const latency = document.querySelector('#latency');
 
 function addMessage(role, content) {
@@ -37,6 +39,7 @@ async function loadStatus() {
     const health = await healthResponse.json();
     setHealth(health.ollama_online, health.ollama_online ? 'Service online' : 'Ollama offline');
     defaultModel.textContent = health.default_model;
+    memoryStatus.textContent = `${health.memory_used_mb} MB`;
     const models = await modelsResponse.json();
     modelSelect.replaceChildren();
     const availableModels = models.data || [];
@@ -58,6 +61,15 @@ async function loadStatus() {
     defaultModel.textContent = 'Unavailable';
   }
 }
+
+refreshModels.addEventListener('click', async () => {
+  refreshModels.disabled = true;
+  try {
+    await loadStatus();
+  } finally {
+    refreshModels.disabled = false;
+  }
+});
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

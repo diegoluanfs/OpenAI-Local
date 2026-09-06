@@ -1,11 +1,19 @@
+from typing import Any
+
 from redis.asyncio import Redis
 
 from app.infrastructure.rate_limiter import InMemoryRateLimiter
 
 
 class RedisRateLimiter:
-    def __init__(self, url: str, key_prefix: str, fallback: InMemoryRateLimiter | None = None) -> None:
-        self._client = Redis.from_url(url, decode_responses=True)
+    def __init__(
+        self,
+        url: str,
+        key_prefix: str,
+        fallback: InMemoryRateLimiter | None = None,
+        client: Any | None = None,
+    ) -> None:
+        self._client = client or Redis.from_url(url, decode_responses=True)
         self._key_prefix = key_prefix.rstrip(":")
         self._fallback = fallback or InMemoryRateLimiter()
 

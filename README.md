@@ -242,6 +242,14 @@ RATE_LIMIT_BACKEND=redis
 REDIS_URL=redis://redis:6379/0
 ```
 
+Suba o profile Redis com:
+
+```bash
+docker compose --profile redis up --build -d
+```
+
+O servico `redis` usa o volume `redis_data` e possui health check proprio.
+
 Se o Redis estiver indisponivel, o backend usa automaticamente o rate limiter em memoria como fallback para preservar a disponibilidade local.
 
 ## Metricas
