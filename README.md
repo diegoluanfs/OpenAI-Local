@@ -200,6 +200,8 @@ Servicos no `docker-compose.yml`:
 - `local-llm-server`: API FastAPI
 - `redis`: opcional, habilitado pelo profile `redis`
 
+Os containers `ollama` e `local-llm-server` possuem health checks no Compose.
+
 Volume persistente:
 
 - `ollama_data` para manter os modelos baixados entre reinicializacoes
