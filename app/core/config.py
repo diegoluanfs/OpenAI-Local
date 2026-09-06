@@ -26,7 +26,9 @@ class Settings(BaseSettings):
     auto_pull_default_model: bool = True
     model_cache_ttl_seconds: float = 5.0
 
+    api_key_file: str | None = None
     api_key: str | None = None
+    allowed_api_keys_file: str | None = None
     allowed_api_keys: str = ""
     allow_anonymous_requests: bool = True
     unauth_rate_limit_per_minute: int = 30
@@ -39,6 +41,32 @@ class Settings(BaseSettings):
     redis_key_prefix: str = "local-llm:ratelimit"
 
     provider_name: str = Field(default="ollama", description="Future extension: vllm, lmstudio, llama_cpp")
+
+    @model_validator(mode="before")
+    @classmethod
+    def load_secret_files(cls, data: object) -> object:
+        if not isinstance(data, dict):
+            return data
+
+        resolved = dict(data)
+
+        for secret_key, file_key in (("api_key", "api_key_file"), ("allowed_api_keys", "allowed_api_keys_file")):
+            current_value = resolved.get(secret_key)
+            if current_value is not None and str(current_value).strip():
+                continue
+            file_path = resolved.get(file_key)
+            if not file_path:
+                continue
+            try:
+                with open(file_path, "r", encoding="utf-8") as file_obj:
+                    secret_value = file_obj.read().strip()
+            except OSError as exc:  # pragma: no cover - validation error path
+                raise ValueError(f"Could not read secret file for {secret_key}: {file_path}") from exc
+
+            if secret_value:
+                resolved[secret_key] = secret_value
+
+        return resolved
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
