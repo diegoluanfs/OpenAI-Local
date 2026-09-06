@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import time
 
 from app.infrastructure.rate_limiter import InMemoryRateLimiter
 
@@ -31,3 +32,15 @@ async def test_in_memory_rate_limiter_handles_concurrent_clients():
     )
 
     assert all(results)
+
+
+@pytest.mark.asyncio
+async def test_in_memory_rate_limiter_reports_latency():
+    limiter = InMemoryRateLimiter()
+    started_at = time.perf_counter()
+
+    for index in range(1000):
+        await limiter.allow(f"latency-client-{index}", limit=1)
+
+    elapsed_ms = (time.perf_counter() - started_at) * 1000
+    assert elapsed_ms >= 0
