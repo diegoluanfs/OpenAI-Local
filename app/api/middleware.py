@@ -29,6 +29,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if len(bucket) >= self.limit_per_minute:
             return JSONResponse(
                 status_code=429,
+                headers={
+                    "Retry-After": "60",
+                    "X-RateLimit-Limit": str(self.limit_per_minute),
+                    "X-RateLimit-Remaining": "0",
+                },
                 content={
                     "error": {
                         "message": "Rate limit exceeded",
@@ -64,6 +69,10 @@ class InferenceConcurrencyMiddleware(BaseHTTPMiddleware):
         if self.semaphore.locked():
             return JSONResponse(
                 status_code=429,
+                headers={
+                    "Retry-After": "1",
+                    "X-Inference-Concurrency-Limit": str(self.limit),
+                },
                 content={
                     "error": {
                         "message": "Inference concurrency limit reached",

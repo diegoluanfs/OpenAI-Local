@@ -77,6 +77,11 @@ async def validate_api_key(
     if len(bucket) >= settings.unauth_rate_limit_per_minute:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            headers={
+                "Retry-After": "60",
+                "X-RateLimit-Limit": str(settings.unauth_rate_limit_per_minute),
+                "X-RateLimit-Remaining": "0",
+            },
             detail={
                 "message": "Rate limit exceeded for requests without API key",
                 "type": "rate_limit_error",

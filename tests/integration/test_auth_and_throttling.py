@@ -58,6 +58,9 @@ def test_ask_limits_anonymous_requests_per_minute():
 
     assert first.status_code == 200
     assert second.status_code == 429
+    assert second.headers["retry-after"] == "60"
+    assert second.headers["x-ratelimit-limit"] == "1"
+    assert second.headers["x-ratelimit-remaining"] == "0"
     payload = second.json()
     assert payload["error"]["code"] == "unauthenticated_rate_limit_exceeded"
 

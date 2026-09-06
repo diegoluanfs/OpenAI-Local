@@ -36,6 +36,7 @@ def _error_response(
     error_type: str,
     code: str,
     details: list[dict] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     request_id = getattr(request.state, "request_id", None)
     payload = {
@@ -50,7 +51,7 @@ def _error_response(
     }
     if details:
         payload["error"]["details"] = details
-    return JSONResponse(status_code=status_code, content=payload)
+    return JSONResponse(status_code=status_code, content=payload, headers=headers)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -135,6 +136,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             error_type=error_type,
             code=code,
             details=details,
+            headers=exc.headers,
         )
 
     @app.exception_handler(Exception)
