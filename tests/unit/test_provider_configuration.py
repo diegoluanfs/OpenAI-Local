@@ -10,14 +10,18 @@ def test_ollama_is_the_registered_provider():
     assert settings.provider_name == "ollama"
 
 
-def test_supported_alternative_providers_are_allowed():
-    vllm = Settings(provider_name="vllm")
+def test_lmstudio_is_supported_alongside_ollama():
     lmstudio = Settings(provider_name="lmstudio")
-    llama_cpp = Settings(provider_name="llama_cpp")
 
-    assert vllm.provider_name == "vllm"
     assert lmstudio.provider_name == "lmstudio"
-    assert llama_cpp.provider_name == "llama_cpp"
+
+
+def test_unimplemented_providers_are_rejected():
+    with pytest.raises(ValidationError, match="provider_name"):
+        Settings(provider_name="vllm")
+
+    with pytest.raises(ValidationError, match="provider_name"):
+        Settings(provider_name="llama_cpp")
 
 
 def test_staging_requires_api_keys_and_disables_anonymous_requests():

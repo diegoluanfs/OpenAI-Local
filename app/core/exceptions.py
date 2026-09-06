@@ -12,3 +12,7 @@ class ModelNotFoundError(LocalLLMError):
 
 class AuthenticationError(LocalLLMError):
     """Raised when API authentication fails."""
+
+
+class OperationNotSupportedError(LocalLLMError):
+    """Raised when a provider cannot perform a requested operation."""

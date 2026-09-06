@@ -62,7 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        if settings.auto_pull_default_model:
+        if settings.auto_pull_default_model and settings.provider_name == "ollama":
             async def _pull_default_model() -> None:
                 try:
                     if not await app.state.container.llm_service.ensure_model_available(settings.default_model):

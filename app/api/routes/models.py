@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.api.dependencies import get_llm_service, validate_api_key
 from app.schemas.openai import PullModelRequest, SetDefaultModelRequest
@@ -7,14 +7,15 @@ router = APIRouter(prefix="/v1/models", tags=["models"], dependencies=[Depends(v
 
 
 @router.get("")
-async def list_models(llm_service=Depends(get_llm_service)):
+async def list_models(request: Request, llm_service=Depends(get_llm_service)):
     models = await llm_service.list_models()
+    provider_name = request.app.state.settings.provider_name
     data = [
         {
             "id": model.get("name", ""),
             "object": "model",
             "created": 0,
-            "owned_by": "ollama",
+            "owned_by": provider_name,
         }
         for model in models
     ]
@@ -41,5 +42,9 @@ async def pull_model(request: PullModelRequest, llm_service=Depends(get_llm_serv
 
 
 @router.get("/status")
-async def model_status(model: str, llm_service=Depends(get_llm_service)):
-    return {"model": model, "available": await llm_service.ensure_model_available(model), "provider": "ollama"}
+async def model_status(model: str, request: Request, llm_service=Depends(get_llm_service)):
+    return {
+        "model": model,
+        "available": await llm_service.ensure_model_available(model),
+        "provider": request.app.state.settings.provider_name,
+    }

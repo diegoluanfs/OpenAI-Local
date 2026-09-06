@@ -73,6 +73,8 @@ Variaveis suportadas:
 - `HOST` (padrao: `0.0.0.0`)
 - `PORT` (padrao: `8000`)
 - `OLLAMA_URL` (padrao: `http://ollama:11434`)
+- `LMSTUDIO_URL` (padrao: `http://host.docker.internal:1234`)
+- `PROVIDER_NAME` (padrao: `ollama`; valores: `ollama`, `lmstudio`)
 - `DEFAULT_MODEL` (padrao: `llama3.2:3b`)
 - `EMBEDDING_MODEL` (padrao: `nomic-embed-text`)
 - `LOG_LEVEL` (padrao: `INFO`)

@@ -52,3 +52,6 @@ class FakeProvider(LLMProvider):
 
     async def health(self) -> bool:
         return True
+
+    async def close(self) -> None:
+        return None

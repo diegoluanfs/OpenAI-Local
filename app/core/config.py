@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     ollama_url: str = "http://ollama:11434"
+    lmstudio_url: str = "http://host.docker.internal:1234"
     default_model: str = "llama3.2:3b"
     embedding_model: str = "nomic-embed-text"
     timeout_seconds: float = 120.0
@@ -42,9 +43,9 @@ class Settings(BaseSettings):
     redis_url: str | None = None
     redis_key_prefix: str = "local-llm:ratelimit"
 
-    provider_name: Literal["ollama", "vllm", "lmstudio", "llama_cpp"] = Field(
+    provider_name: Literal["ollama", "lmstudio"] = Field(
         default="ollama",
-        description="Future extension: vllm, lmstudio, llama_cpp",
+        description="Configured model provider",
     )
 
     @model_validator(mode="before")
@@ -75,7 +76,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
-        supported_providers = {"ollama", "vllm", "lmstudio", "llama_cpp"}
+        supported_providers = {"ollama", "lmstudio"}
         if self.provider_name not in supported_providers:
             raise ValueError(
                 f"Unsupported provider '{self.provider_name}'. Registered providers: {sorted(supported_providers)}"
