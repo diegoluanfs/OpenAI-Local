@@ -50,3 +50,14 @@ async def test_ask_returns_simple_answer_shape():
     assert result["question"] == "O que e FastAPI?"
     assert result["answer"] == "foobar"
     assert result["model"] == "llama3.2:3b"
+
+
+@pytest.mark.asyncio
+async def test_chat_stream_returns_sse_chunks_and_done_marker():
+    service = LLMService(FakeProvider(), InMemoryModelRepository(FakeProvider(), "llama3.2:3b"), "nomic-embed-text")
+    request = ChatCompletionRequest(messages=[ChatMessage(role="user", content="Oi")], stream=True)
+
+    chunks = [chunk async for chunk in service.chat_completion_stream(request)]
+
+    assert any('"object": "chat.completion.chunk"' in chunk for chunk in chunks)
+    assert chunks[-1] == "data: [DONE]\n\n"
