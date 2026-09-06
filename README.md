@@ -441,7 +441,7 @@ Configuracao Prometheus e regras iniciais estao versionadas em `monitoring/prome
 - `prometheus.yml` configura o scrape de `local-llm-server:8000/metrics`.
 - `alerts.yml` define regras de disponibilidade, erro, latencia e readiness.
 
-Um dashboard Grafana inicial esta versionado em `monitoring/grafana/local-llm-dashboard.json` com paineis de requests, erro, p95 de latencia e tokens por modelo.
+Um dashboard Grafana inicial esta versionado em `monitoring/grafana/local-llm-dashboard.json` com paineis de requests, erro, p95 de latencia e tokens por modelo. O datasource Prometheus e o dashboard sao provisionados automaticamente.
 
 As regras cobrem:
 

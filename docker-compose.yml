@@ -72,6 +72,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/local-llm-dashboard.json:/var/lib/grafana/dashboards/local-llm-dashboard.json:ro
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       prometheus:
         condition: service_started
