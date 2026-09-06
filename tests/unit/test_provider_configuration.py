@@ -10,9 +10,14 @@ def test_ollama_is_the_registered_provider():
     assert settings.provider_name == "ollama"
 
 
-def test_unsupported_provider_fails_explicitly():
-    with pytest.raises(ValidationError, match="Unsupported provider"):
-        Settings(provider_name="vllm")
+def test_supported_alternative_providers_are_allowed():
+    vllm = Settings(provider_name="vllm")
+    lmstudio = Settings(provider_name="lmstudio")
+    llama_cpp = Settings(provider_name="llama_cpp")
+
+    assert vllm.provider_name == "vllm"
+    assert lmstudio.provider_name == "lmstudio"
+    assert llama_cpp.provider_name == "llama_cpp"
 
 
 def test_configurable_httpx_pool_limits_are_supported():

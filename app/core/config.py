@@ -42,7 +42,10 @@ class Settings(BaseSettings):
     redis_url: str | None = None
     redis_key_prefix: str = "local-llm:ratelimit"
 
-    provider_name: str = Field(default="ollama", description="Future extension: vllm, lmstudio, llama_cpp")
+    provider_name: Literal["ollama", "vllm", "lmstudio", "llama_cpp"] = Field(
+        default="ollama",
+        description="Future extension: vllm, lmstudio, llama_cpp",
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -72,9 +75,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
-        if self.provider_name != "ollama":
+        supported_providers = {"ollama", "vllm", "lmstudio", "llama_cpp"}
+        if self.provider_name not in supported_providers:
             raise ValueError(
-                f"Unsupported provider '{self.provider_name}'. Registered providers: ollama"
+                f"Unsupported provider '{self.provider_name}'. Registered providers: {sorted(supported_providers)}"
             )
         if self.app_env == "production" and not self.allowed_api_keys_set:
             raise ValueError("ALLOWED_API_KEYS must be configured when APP_ENV=production")
