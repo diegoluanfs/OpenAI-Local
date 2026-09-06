@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from app.api.dependencies import _unauth_request_buckets
 from app.core.config import Settings
@@ -59,3 +60,18 @@ def test_ask_limits_anonymous_requests_per_minute():
     assert second.status_code == 429
     payload = second.json()
     assert payload["error"]["code"] == "unauthenticated_rate_limit_exceeded"
+
+
+def test_production_requires_configured_api_keys():
+    try:
+        Settings(app_env="production")
+    except ValidationError as error:
+        assert "ALLOWED_API_KEYS" in str(error)
+    else:
+        raise AssertionError("Production settings must require ALLOWED_API_KEYS")
+
+
+def test_production_disables_anonymous_requests():
+    settings = Settings(app_env="production", allowed_api_keys="production-key")
+
+    assert settings.allow_anonymous_requests is False

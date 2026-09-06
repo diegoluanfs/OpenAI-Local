@@ -50,6 +50,16 @@ async def validate_api_key(
 
     request.state.is_authenticated = False
 
+    if not settings.allow_anonymous_requests:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "message": "API Key is required",
+                "type": "authentication_error",
+                "code": "api_key_required",
+            },
+        )
+
     # Anonymous requests are allowed, but throttled separately.
     if settings.unauth_rate_limit_per_minute <= 0:
         return

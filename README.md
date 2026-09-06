@@ -60,6 +60,7 @@ docker compose up --build
 
 Variaveis suportadas:
 
+- `APP_ENV` (padrao: `development`; valores: `development`, `test`, `production`)
 - `HOST` (padrao: `0.0.0.0`)
 - `PORT` (padrao: `8000`)
 - `OLLAMA_URL` (padrao: `http://ollama:11434`)
@@ -71,7 +72,8 @@ Variaveis suportadas:
 - `CORS_ORIGINS` (padrao: `*`)
 - `RATE_LIMIT_PER_MINUTE` (padrao: `0`, desabilitado)
 - `AUTO_PULL_DEFAULT_MODEL` (padrao: `true`)
-- `ALLOWED_API_KEYS` (padrao: 10 chaves estaticas locais)
+- `ALLOWED_API_KEYS` (obrigatorio em `production`; separado por virgulas)
+- `ALLOW_ANONYMOUS_REQUESTS` (padrao: `true`; forcado para `false` em `production`)
 - `UNAUTH_RATE_LIMIT_PER_MINUTE` (padrao: `30`)
 
 ## Uso
@@ -205,12 +207,24 @@ docker compose up --build -d
 - Logs estruturados JSON
 - Correlation ID por request (`X-Request-Id`)
 - Suporte opcional a API Key (`Authorization: Bearer <key>` ou `X-API-Key`)
-- Lista estatica de 10 API Keys para autorizacao (`ALLOWED_API_KEYS`)
+- Allowlist configuravel de API Keys para autorizacao (`ALLOWED_API_KEYS`)
 - Suporte a API Key via `Authorization: Bearer <key>` ou `X-API-Key`
 - Requisicoes sem API key sao permitidas, mas limitadas por `UNAUTH_RATE_LIMIT_PER_MINUTE`
 - Inferencias simultaneas limitadas por `INFERENCE_CONCURRENCY_LIMIT`
 - CORS configuravel
 - Rate limit em memoria (opcional)
+
+### Producao
+
+Configure as chaves fora do repositorio e use `APP_ENV=production`:
+
+```env
+APP_ENV=production
+ALLOWED_API_KEYS=chave-secreta-1,chave-secreta-2
+ALLOW_ANONYMOUS_REQUESTS=false
+```
+
+A aplicacao nao inicia em producao sem pelo menos uma chave configurada. Requisicoes sem API key recebem `401 API Key is required`.
 
 ## Metricas
 

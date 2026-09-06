@@ -1,13 +1,14 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    app_env: Literal["development", "test", "production"] = "development"
     app_name: str = "Local LLM Server"
     host: str = "0.0.0.0"
     port: int = 8000
@@ -26,16 +27,22 @@ class Settings(BaseSettings):
     model_cache_ttl_seconds: float = 5.0
 
     api_key: str | None = None
-    allowed_api_keys: str = (
-        "local-api-key-01,local-api-key-02,local-api-key-03,local-api-key-04,local-api-key-05,"
-        "local-api-key-06,local-api-key-07,local-api-key-08,local-api-key-09,local-api-key-10"
-    )
+    allowed_api_keys: str = ""
+    allow_anonymous_requests: bool = True
     unauth_rate_limit_per_minute: int = 30
     cors_origins: str = "*"
     rate_limit_per_minute: int = 0
     inference_concurrency_limit: int = 2
 
     provider_name: str = Field(default="ollama", description="Future extension: vllm, lmstudio, llama_cpp")
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        if self.app_env == "production" and not self.allowed_api_keys_set:
+            raise ValueError("ALLOWED_API_KEYS must be configured when APP_ENV=production")
+        if self.app_env == "production":
+            self.allow_anonymous_requests = False
+        return self
 
     @property
     def allowed_api_keys_set(self) -> set[str]:
