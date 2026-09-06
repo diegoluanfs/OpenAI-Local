@@ -503,6 +503,24 @@ $env:REDIS_URL="redis://localhost:6379/0"
 pytest tests/integration/test_redis_integration.py -q
 ```
 
+### Benchmark de performance
+
+Para medir uma instancia em execucao, use `scripts/benchmark.py`. O relatorio JSON
+inclui throughput, falhas, latencia minima, mediana, p95 e p99:
+
+```powershell
+python scripts/benchmark.py --path /health/live --requests 100 --concurrency 10
+python scripts/benchmark.py --path /v1/chat/completions --model llama3.2:3b `
+  --requests 20 --concurrency 2 --api-key sua-chave
+python scripts/benchmark.py --path /v1/chat/completions --model llama3.2:3b `
+  --requests 10 --concurrency 2 --stream
+```
+
+O benchmark executa warmup por padrao e retorna codigo diferente de zero quando
+alguma requisicao falha. Ajuste `--warmup`, `--timeout`, `--requests` e
+`--concurrency` conforme o ambiente. Para endpoints protegidos, prefira definir
+`API_KEY` no ambiente em vez de expor a chave na linha de comando.
+
 ## CI
 
 O workflow `.github/workflows/ci.yml` executa automaticamente em pushes e pull requests para `main`:
