@@ -23,6 +23,7 @@ from app.container import AppContainer
 from app.core.config import Settings, get_settings
 from app.core.exceptions import LocalLLMError
 from app.core.logging import RequestLoggingMiddleware, setup_logging
+from app.core.tracing import configure_tracing
 
 
 def _parse_cors(origins: str) -> list[str]:
@@ -81,6 +82,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         description="OpenAI-compatible local LLM server powered by Ollama.",
         version="1.0.0",
         lifespan=lifespan,
+    )
+    configure_tracing(
+        app,
+        enabled=settings.tracing_enabled,
+        service_name=settings.otel_service_name,
+        endpoint=settings.otel_exporter_otlp_endpoint,
     )
     app.state.settings = settings
     app.state.container = AppContainer(settings)

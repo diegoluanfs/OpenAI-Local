@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    tracing_enabled: bool = False
+    otel_service_name: str = "local-llm-server"
+    otel_exporter_otlp_endpoint: str | None = None
 
     ollama_url: str = "http://ollama:11434"
     lmstudio_url: str = "http://host.docker.internal:1234"
@@ -85,6 +88,8 @@ class Settings(BaseSettings):
             )
         if self.fallback_provider_name != "none" and self.fallback_provider_name == self.provider_name:
             raise ValueError("FALLBACK_PROVIDER_NAME must differ from PROVIDER_NAME")
+        if self.tracing_enabled and not self.otel_exporter_otlp_endpoint:
+            raise ValueError("OTEL_EXPORTER_OTLP_ENDPOINT is required when TRACING_ENABLED=true")
         if self.app_env in {"staging", "production"} and not self.allowed_api_keys_set:
             raise ValueError("ALLOWED_API_KEYS must be configured when APP_ENV is staging or production")
         if self.app_env in {"staging", "production"}:

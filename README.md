@@ -80,6 +80,9 @@ Variaveis suportadas:
 - `DEFAULT_MODEL` (padrao: `llama3.2:3b`)
 - `EMBEDDING_MODEL` (padrao: `nomic-embed-text`)
 - `LOG_LEVEL` (padrao: `INFO`)
+- `TRACING_ENABLED` (padrao: `false`; exige endpoint OTLP quando `true`)
+- `OTEL_SERVICE_NAME` (padrao: `local-llm-server`)
+- `OTEL_EXPORTER_OTLP_ENDPOINT` (opcional; endpoint gRPC do collector OTLP)
 - `TIMEOUT_SECONDS` (padrao: `120`)
 - `TIMEOUT_TAGS_SECONDS` (padrao: `10`)
 - `TIMEOUT_CHAT_SECONDS` (padrao: `120`)
@@ -473,17 +476,28 @@ Implementado parcialmente:
 - Publicacao automatica de imagens no GHCR para tags `v*`.
 - Tags versionadas e tag `latest`.
 - Health check da imagem Docker na CI.
+- Instrumentacao OpenTelemetry opcional com exportacao OTLP.
 
 Pendente:
 
 - Deploy automatizado dos ambientes de staging e producao.
 - Rollback automatizado.
 - Gestao externa de secrets.
-- Tracing distribuido.
+- Gestao operacional do collector de tracing.
 
 O Compose de producao e o reverse proxy Caddy ja estao versionados em `deploy/`.
 O deploy ainda requer DNS, armazenamento dos secrets e uma plataforma para
 automatizar promocao, rollback e monitoramento externo.
+
+Tracing distribuido e opcional. Para exportar spans para um collector OTLP:
+
+```env
+TRACING_ENABLED=true
+OTEL_SERVICE_NAME=local-llm-server
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+```
+
+O collector e o backend de traces continuam sendo responsabilidade da infraestrutura.
 
 Configuracao Prometheus e regras iniciais estao versionadas em `monitoring/prometheus/`:
 

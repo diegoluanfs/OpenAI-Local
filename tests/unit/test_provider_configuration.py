@@ -28,6 +28,18 @@ def test_fallback_provider_must_differ_from_primary():
         Settings(provider_name="ollama", fallback_provider_name="ollama")
 
 
+def test_tracing_is_disabled_by_default():
+    settings = Settings()
+
+    assert settings.tracing_enabled is False
+    assert settings.otel_exporter_otlp_endpoint is None
+
+
+def test_tracing_requires_otlp_endpoint_when_enabled():
+    with pytest.raises(ValidationError, match="OTEL_EXPORTER_OTLP_ENDPOINT"):
+        Settings(tracing_enabled=True)
+
+
 def test_staging_requires_api_keys_and_disables_anonymous_requests():
     settings = Settings(app_env="staging", allowed_api_keys="staging-key")
 
