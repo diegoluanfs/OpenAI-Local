@@ -95,6 +95,8 @@ Variaveis suportadas:
 - `UNAUTH_RATE_LIMIT_PER_MINUTE` (padrao: `30`)
 - `MAX_REQUEST_BODY_BYTES` (padrao: `1048576` / 1 MiB)
 - `INFERENCE_CONCURRENCY_LIMIT` (padrao: `2`)
+- `HTTPX_MAX_CONNECTIONS` (padrao: `20`; limite total de conexoes HTTP simultaneas para o Ollama)
+- `HTTPX_MAX_KEEPALIVE_CONNECTIONS` (padrao: `5`; conexoes reutilizaveis mantidas vivas)
 - `RATE_LIMIT_BACKEND` (padrao: `memory`; valores: `memory`, `redis`)
 - `REDIS_URL` (opcional; necessario quando `RATE_LIMIT_BACKEND=redis`)
 - `REDIS_KEY_PREFIX` (padrao: `local-llm:ratelimit`)

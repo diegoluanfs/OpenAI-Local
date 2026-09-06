@@ -24,6 +24,8 @@ class AppContainer:
             timeout_generate_seconds=settings.timeout_generate_seconds,
             timeout_embeddings_seconds=settings.timeout_embeddings_seconds,
             timeout_pull_seconds=settings.timeout_pull_seconds,
+            max_connections=settings.httpx_max_connections,
+            max_keepalive_connections=settings.httpx_max_keepalive_connections,
         )
         self.provider = OllamaProvider(ollama_client)
         memory_rate_limiter = InMemoryRateLimiter()

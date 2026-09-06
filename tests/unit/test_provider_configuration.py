@@ -15,6 +15,16 @@ def test_unsupported_provider_fails_explicitly():
         Settings(provider_name="vllm")
 
 
+def test_configurable_httpx_pool_limits_are_supported():
+    settings = Settings(
+        httpx_max_connections=42,
+        httpx_max_keepalive_connections=7,
+    )
+
+    assert settings.httpx_max_connections == 42
+    assert settings.httpx_max_keepalive_connections == 7
+
+
 def test_file_based_secrets_are_loaded_for_production(tmp_path, monkeypatch):
     api_key_file = tmp_path / "api.key"
     allowed_keys_file = tmp_path / "allowed-keys.txt"

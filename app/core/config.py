@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 0
     inference_concurrency_limit: int = 2
     max_request_body_bytes: int = 1_048_576
+    httpx_max_connections: int = 20
+    httpx_max_keepalive_connections: int = 5
     rate_limit_backend: Literal["memory", "redis"] = "memory"
     redis_url: str | None = None
     redis_key_prefix: str = "local-llm:ratelimit"

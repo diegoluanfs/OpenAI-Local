@@ -16,8 +16,14 @@ class OllamaClient:
         timeout_generate_seconds: float,
         timeout_embeddings_seconds: float,
         timeout_pull_seconds: float,
+        max_connections: int = 20,
+        max_keepalive_connections: int = 5,
     ) -> None:
-        self._client = httpx.AsyncClient(base_url=base_url, timeout=timeout_seconds)
+        limits = httpx.Limits(
+            max_connections=max_connections,
+            max_keepalive_connections=max_keepalive_connections,
+        )
+        self._client = httpx.AsyncClient(base_url=base_url, timeout=timeout_seconds, limits=limits)
         self._timeout_tags_seconds = timeout_tags_seconds
         self._timeout_chat_seconds = timeout_chat_seconds
         self._timeout_generate_seconds = timeout_generate_seconds
