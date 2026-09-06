@@ -48,5 +48,5 @@ async def test_ask_returns_simple_answer_shape():
     result = await service.ask(request)
 
     assert result["question"] == "O que e FastAPI?"
-    assert result["answer"] == "hello world"
+    assert result["answer"] == "foobar"
     assert result["model"] == "llama3.2:3b"

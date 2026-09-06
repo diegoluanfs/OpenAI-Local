@@ -313,6 +313,8 @@ O workflow `.github/workflows/ci.yml` executa automaticamente em pushes e pull r
 
 - compilacao do codigo Python
 - testes automatizados
+- relatorio de cobertura de testes (`coverage.xml`)
+- cobertura minima exigida de 70%
 - validacao das rotas principais no OpenAPI
 - build da imagem Docker
 

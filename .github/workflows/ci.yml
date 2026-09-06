@@ -26,7 +26,13 @@ jobs:
         run: python -m compileall -q app
 
       - name: Run tests
-        run: pytest -q
+        run: pytest -q --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=70
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
 
       - name: Validate OpenAPI contract
         run: |
