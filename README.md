@@ -76,6 +76,7 @@ Variaveis suportadas:
 - `LMSTUDIO_URL` (padrao: `http://host.docker.internal:1234`)
 - `VLLM_URL` (padrao: `http://vllm:8000`)
 - `PROVIDER_NAME` (padrao: `ollama`; valores: `ollama`, `lmstudio`, `vllm`)
+- `FALLBACK_PROVIDER_NAME` (padrao: `none`; valores: `none`, `ollama`, `lmstudio`, `vllm`)
 - `DEFAULT_MODEL` (padrao: `llama3.2:3b`)
 - `EMBEDDING_MODEL` (padrao: `nomic-embed-text`)
 - `LOG_LEVEL` (padrao: `INFO`)
@@ -457,10 +458,12 @@ Implementado:
 
 #### Sprint 10: Providers alternativos
 
+Implementado:
+
 - Testes de conformidade do contrato `LLMProvider`.
-- Provider para LM Studio ou vLLM.
+- Providers OpenAI-compatible para LM Studio e vLLM.
 - Selecao de provider por ambiente.
-- Fallback entre providers.
+- Fallback configuravel entre providers, com protecao contra retry apos inicio do streaming.
 
 #### Sprint 11: Deploy e operacao de producao
 

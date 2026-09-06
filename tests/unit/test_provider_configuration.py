@@ -23,6 +23,11 @@ def test_unimplemented_providers_are_rejected():
         Settings(provider_name="llama_cpp")
 
 
+def test_fallback_provider_must_differ_from_primary():
+    with pytest.raises(ValidationError, match="FALLBACK_PROVIDER_NAME"):
+        Settings(provider_name="ollama", fallback_provider_name="ollama")
+
+
 def test_staging_requires_api_keys_and_disables_anonymous_requests():
     settings = Settings(app_env="staging", allowed_api_keys="staging-key")
 

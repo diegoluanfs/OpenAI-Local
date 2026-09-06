@@ -1,5 +1,6 @@
 from app.container import AppContainer
 from app.core.config import Settings
+from app.infrastructure.fallback_provider import FallbackProvider
 from app.infrastructure.openai_compatible.provider import OpenAICompatibleProvider
 from app.infrastructure.ollama.provider import OllamaProvider
 
@@ -20,3 +21,9 @@ def test_container_selects_openai_compatible_provider_for_vllm():
     container = AppContainer(Settings(provider_name="vllm"))
 
     assert isinstance(container.provider, OpenAICompatibleProvider)
+
+
+def test_container_wraps_primary_provider_when_fallback_is_configured():
+    container = AppContainer(Settings(provider_name="ollama", fallback_provider_name="lmstudio"))
+
+    assert isinstance(container.provider, FallbackProvider)

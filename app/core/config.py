@@ -48,6 +48,7 @@ class Settings(BaseSettings):
         default="ollama",
         description="Configured model provider",
     )
+    fallback_provider_name: Literal["none", "ollama", "lmstudio", "vllm"] = "none"
 
     @model_validator(mode="before")
     @classmethod
@@ -82,6 +83,8 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"Unsupported provider '{self.provider_name}'. Registered providers: {sorted(supported_providers)}"
             )
+        if self.fallback_provider_name != "none" and self.fallback_provider_name == self.provider_name:
+            raise ValueError("FALLBACK_PROVIDER_NAME must differ from PROVIDER_NAME")
         if self.app_env in {"staging", "production"} and not self.allowed_api_keys_set:
             raise ValueError("ALLOWED_API_KEYS must be configured when APP_ENV is staging or production")
         if self.app_env in {"staging", "production"}:
