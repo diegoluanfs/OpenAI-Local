@@ -312,6 +312,7 @@ pytest -q
 O workflow `.github/workflows/ci.yml` executa automaticamente em pushes e pull requests para `main`:
 
 - compilacao do codigo Python
+- lint com Ruff
 - testes automatizados
 - relatorio de cobertura de testes (`coverage.xml`)
 - cobertura minima exigida de 70%

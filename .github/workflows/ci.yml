@@ -25,6 +25,9 @@ jobs:
       - name: Compile application
         run: python -m compileall -q app
 
+      - name: Run Ruff
+        run: ruff check app tests
+
       - name: Run tests
         run: pytest -q --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=70
 
