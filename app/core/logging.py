@@ -2,7 +2,7 @@ import logging
 import time
 import uuid
 
-from pythonjsonlogger import jsonlogger
+from pythonjsonlogger.json import JsonFormatter
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
@@ -16,7 +16,7 @@ def setup_logging(level: str) -> None:
             root.removeHandler(handler)
 
     handler = logging.StreamHandler()
-    formatter = jsonlogger.JsonFormatter(
+    formatter = JsonFormatter(
         "%(asctime)s %(levelname)s %(name)s %(message)s %(method)s %(path)s %(status_code)s %(duration_ms)s"
     )
     handler.setFormatter(formatter)

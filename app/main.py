@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import logging
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -59,10 +60,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     setup_logging(settings.log_level)
 
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        if settings.auto_pull_default_model:
+            async def _pull_default_model() -> None:
+                try:
+                    if not await app.state.container.llm_service.ensure_model_available(settings.default_model):
+                        logger.info("pulling_default_model", extra={"model": settings.default_model})
+                        await app.state.container.llm_service.pull_model(settings.default_model)
+                except Exception:
+                    logger.exception("failed_to_pull_default_model")
+
+            asyncio.create_task(_pull_default_model())
+
+        yield
+        await app.state.container.close()
+
     app = FastAPI(
         title="Local LLM Server",
         description="OpenAI-compatible local LLM server powered by Ollama.",
         version="1.0.0",
+        lifespan=lifespan,
     )
     app.state.settings = settings
     app.state.container = AppContainer(settings)
@@ -150,23 +168,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             error_type="internal_server_error",
             code="internal_error",
         )
-
-    @app.on_event("startup")
-    async def startup_event():
-        if settings.auto_pull_default_model:
-            async def _pull_default_model() -> None:
-                try:
-                    if not await app.state.container.llm_service.ensure_model_available(settings.default_model):
-                        logger.info("pulling_default_model", extra={"model": settings.default_model})
-                        await app.state.container.llm_service.pull_model(settings.default_model)
-                except Exception:
-                    logger.exception("failed_to_pull_default_model")
-
-            asyncio.create_task(_pull_default_model())
-
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        await app.state.container.close()
 
     return app
 
