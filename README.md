@@ -199,6 +199,7 @@ Servicos no `docker-compose.yml`:
 - `ollama`: runtime de modelos locais
 - `local-llm-server`: API FastAPI
 - `redis`: opcional, habilitado pelo profile `redis`
+- `prometheus` e `grafana`: opcionais, habilitados pelo profile `monitoring`
 
 Os containers `ollama` e `local-llm-server` possuem health checks no Compose.
 
@@ -206,6 +207,7 @@ Volume persistente:
 
 - `ollama_data` para manter os modelos baixados entre reinicializacoes
 - `redis_data` para manter o estado do Redis quando o profile estiver ativo
+- `prometheus_data` e `grafana_data` para persistir observabilidade
 
 Ao subir pela primeira vez, a API tenta baixar automaticamente o `DEFAULT_MODEL` se ele nao estiver instalado.
 
@@ -222,6 +224,15 @@ docker compose --profile redis up --build -d
 ```
 
 Para usar o Redis na API, configure `RATE_LIMIT_BACKEND=redis` e `REDIS_URL=redis://redis:6379/0` no `.env`.
+
+Observabilidade local:
+
+```bash
+docker compose --profile monitoring up --build -d
+```
+
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
 
 ## Troca de Modelo
 
