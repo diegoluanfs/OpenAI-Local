@@ -499,6 +499,64 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
 
 O collector e o backend de traces continuam sendo responsabilidade da infraestrutura.
 
+### Sprints restantes
+
+#### Sprint 12: Deploy automatizado de staging
+
+- Criar workflow manual e por tag para publicar em staging.
+- Configurar GitHub Environment `staging` com URL, imagem e secrets protegidos.
+- Fazer deploy usando `deploy/docker-compose.production.yml` e `IMAGE_TAG` imutavel.
+- Executar smoke tests de `/health/live`, `/health/ready` e uma chamada autenticada.
+- Publicar logs e resultado do deploy como artefatos do workflow.
+
+**Criterio de conclusao:** uma tag de release consegue promover a imagem para
+staging e falha automaticamente se o health check ou o smoke test falhar.
+
+#### Sprint 13: Deploy de producao e rollback
+
+- Criar GitHub Environment `production` com aprovacao manual obrigatoria.
+- Promover para producao somente uma imagem ja validada em staging.
+- Registrar a versao atualmente implantada antes de cada rollout.
+- Implementar rollback para a ultima versao saudavel em caso de falha.
+- Adicionar smoke test pos-deploy e procedimento de rollback manual documentado.
+
+**Criterio de conclusao:** uma promocao aprovada pode ser revertida para a ultima
+versao saudavel sem rebuild da imagem.
+
+#### Sprint 14: Gestao externa de secrets
+
+- Escolher o backend de secrets da infraestrutura (GitHub Environment, Vault,
+  cloud secret manager ou equivalente).
+- Remover secrets reais de arquivos locais e variaveis expostas no workflow.
+- Montar `ALLOWED_API_KEYS` via secret file no deploy.
+- Rotacionar API keys sem alterar a imagem publicada.
+- Validar que logs, artefatos e mensagens de erro nunca exibem secrets.
+
+**Criterio de conclusao:** o deploy funciona sem secrets versionados e permite
+rotacao controlada das chaves.
+
+#### Sprint 15: Operacao de tracing e observabilidade
+
+- Provisionar collector OTLP e backend de traces por ambiente.
+- Adicionar dashboard de latencia, erros, provider e correlation ID.
+- Criar alertas para falha de exportacao, erro elevado e latencia p95.
+- Documentar retencao, custo, amostragem e troubleshooting.
+- Validar correlação entre `X-Request-Id`, logs, métricas e traces.
+
+**Criterio de conclusao:** uma requisição de staging pode ser localizada de ponta
+a ponta nos logs, metricas e traces.
+
+#### Sprint 16: Validação final de produção
+
+- Executar benchmark de inferência real com Ollama, LM Studio e/ou vLLM ativos.
+- Registrar throughput, p95/p99, tempo até o primeiro token e memória.
+- Executar teste de carga com limites de concorrência e pool definidos.
+- Validar expiração/renovação TLS, readiness, fallback e rollback.
+- Criar checklist de go-live e relatório final de capacidade.
+
+**Criterio de conclusao:** os limites operacionais estão medidos, documentados e
+aprovados para o ambiente de produção.
+
 Configuracao Prometheus e regras iniciais estao versionadas em `monitoring/prometheus/`:
 
 - `prometheus.yml` configura o scrape de `local-llm-server:8000/metrics`.
