@@ -17,6 +17,17 @@ class TimeoutHttpClient:
         return None
 
 
+class ResponseHttpClient:
+    def __init__(self, status_code: int, payload: dict):
+        self.response = httpx.Response(status_code, json=payload)
+
+    async def post(self, *args, **kwargs):
+        return self.response
+
+    async def aclose(self):
+        return None
+
+
 def create_client() -> OllamaClient:
     client = OllamaClient("http://unused", 1, 1, 1, 1, 1, 1)
     cast(Any, client)._client = TimeoutHttpClient()
@@ -39,3 +50,23 @@ async def test_chat_timeout_becomes_provider_error():
 async def test_embeddings_timeout_becomes_provider_error():
     with pytest.raises(ProviderUnavailableError, match="embeddings request timed out"):
         await create_client().embeddings("model", "text")
+
+
+@pytest.mark.asyncio
+async def test_missing_model_becomes_model_not_found_error():
+    client = create_client()
+    client._client = ResponseHttpClient(404, {"error": "not found"})
+
+    from app.core.exceptions import ModelNotFoundError
+
+    with pytest.raises(ModelNotFoundError, match="model"):
+        await client.generate("model", "prompt", None, None, False)
+
+
+@pytest.mark.asyncio
+async def test_provider_server_error_becomes_provider_error():
+    client = create_client()
+    client._client = ResponseHttpClient(500, {"error": "upstream failure"})
+
+    with pytest.raises(ProviderUnavailableError, match="upstream failure"):
+        await client.generate("model", "prompt", None, None, False)
