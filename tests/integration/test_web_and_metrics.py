@@ -23,6 +23,7 @@ def test_web_interface_is_served():
     assert "loadStatus" in script.text
     assert "export-button" in response.text
     assert "stream-toggle" in response.text
+    assert "error-rate" in response.text
     assert "local-llm:conversation" in script.text
     assert "maxStoredMessages = 100" in script.text
     assert "setInterval" in script.text

@@ -16,6 +16,7 @@ const latency = document.querySelector('#latency');
 const requestCount = document.querySelector('#request-count');
 const inferenceCount = document.querySelector('#inference-count');
 const latencyStatus = document.querySelector('#latency-status');
+const errorRate = document.querySelector('#error-rate');
 const streamToggle = document.querySelector('#stream-toggle');
 const conversationStorageKey = 'local-llm:conversation';
 const maxStoredMessages = 100;
@@ -126,13 +127,16 @@ async function loadMetrics() {
     const inferences = metricValue(metrics, 'local_llm_inference_requests_total');
     const duration = metricValue(metrics, 'local_llm_request_duration_seconds_sum');
     const count = metricValue(metrics, 'local_llm_request_duration_seconds_count');
+    const errors = metricValue(metrics, 'local_llm_errors_total');
     requestCount.textContent = requests.toLocaleString('en-US');
     inferenceCount.textContent = inferences.toLocaleString('en-US');
     latencyStatus.textContent = count ? `${Math.round((duration / count) * 1000)} ms` : '—';
+    errorRate.textContent = count ? `${((errors / count) * 100).toFixed(1)}%` : '0.0%';
   } catch {
     requestCount.textContent = '—';
     inferenceCount.textContent = '—';
     latencyStatus.textContent = '—';
+    errorRate.textContent = '—';
   }
 }
 

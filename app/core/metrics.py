@@ -23,6 +23,11 @@ TOKENS_TOTAL = Counter(
     "Total de tokens reportados pelo provider.",
     ["model", "type"],
 )
+ERRORS_TOTAL = Counter(
+    "local_llm_errors_total",
+    "Total de respostas HTTP com erro.",
+    ["method", "path", "status"],
+)
 
 
 def observe_request(method: str, path: str, status_code: int, started_at: float) -> None:
@@ -30,6 +35,8 @@ def observe_request(method: str, path: str, status_code: int, started_at: float)
     duration = time.perf_counter() - started_at
     REQUESTS_TOTAL.labels(method=method, path=path, status=status).inc()
     REQUEST_DURATION_SECONDS.labels(method=method, path=path).observe(duration)
+    if status_code >= 400:
+        ERRORS_TOTAL.labels(method=method, path=path, status=status).inc()
 
     if path == "/ask" or path.startswith("/v1/"):
         INFERENCE_REQUESTS_TOTAL.labels(path=path, status=status).inc()
