@@ -17,6 +17,16 @@ const inferenceCount = document.querySelector('#inference-count');
 const latencyStatus = document.querySelector('#latency-status');
 const streamToggle = document.querySelector('#stream-toggle');
 
+function restorePreferences() {
+  modelSelect.value = localStorage.getItem('local-llm:model') || '';
+  streamToggle.checked = localStorage.getItem('local-llm:stream') === 'true';
+}
+
+function savePreferences() {
+  if (modelSelect.value) localStorage.setItem('local-llm:model', modelSelect.value);
+  localStorage.setItem('local-llm:stream', String(streamToggle.checked));
+}
+
 function addMessage(role, content) {
   const message = document.createElement('div');
   message.className = `message ${role}`;
@@ -127,6 +137,10 @@ async function loadStatus() {
       option.textContent = health.default_model;
       modelSelect.appendChild(option);
     }
+    const savedModel = localStorage.getItem('local-llm:model');
+    if (savedModel && [...modelSelect.options].some((option) => option.value === savedModel)) {
+      modelSelect.value = savedModel;
+    }
   } catch (error) {
     setHealth(false, 'Service unavailable');
     defaultModel.textContent = 'Unavailable';
@@ -147,6 +161,7 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const question = questionInput.value.trim();
   if (!question) return;
+  savePreferences();
   const startedAt = performance.now();
   addMessage('user', question);
   questionInput.value = '';
@@ -178,6 +193,9 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
+modelSelect.addEventListener('change', savePreferences);
+streamToggle.addEventListener('change', savePreferences);
+
 clearButton.addEventListener('click', () => {
   messages.innerHTML = '<div class="welcome"><span class="welcome-kicker">READY TO THINK</span><h2>What would you like to explore?</h2><p>Ask a question and the local model will answer without leaving your environment.</p></div>';
   latency.textContent = 'Local · private · direct';
@@ -192,3 +210,4 @@ questionInput.addEventListener('keydown', (event) => {
 
 loadStatus();
 loadMetrics();
+restorePreferences();
