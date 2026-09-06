@@ -503,10 +503,22 @@ O collector e o backend de traces continuam sendo responsabilidade da infraestru
 
 #### Sprint 12: Deploy automatizado de staging
 
-- Criar workflow manual e por tag para publicar em staging.
-- Configurar GitHub Environment `staging` com URL, imagem e secrets protegidos.
-- Fazer deploy usando `deploy/docker-compose.production.yml` e `IMAGE_TAG` imutavel.
-- Executar smoke tests de `/health/live`, `/health/ready` e uma chamada autenticada.
+Implementado parcialmente:
+
+- Workflow manual e por tag em `.github/workflows/deploy-staging.yml`.
+- Deploy remoto por SSH com GitHub Environment `staging`.
+- Validacao do Compose, pull da imagem, rollout e smoke test de liveness.
+- Scripts de deploy e rollback em `deploy/scripts/`.
+
+- Configurar no Environment `staging` os secrets `STAGING_HOST`, `STAGING_USER`,
+  `STAGING_SSH_KEY` e `STAGING_DEPLOY_PATH`.
+- Provisionar no host remoto `.env.production` e
+  `secrets/allowed_api_keys` sem versiona-los.
+- Garantir Docker, Compose, `curl`, DNS e portas necessarias no host.
+
+Pendencias da sprint:
+
+- Adicionar smoke tests de `/health/ready` e uma chamada autenticada.
 - Publicar logs e resultado do deploy como artefatos do workflow.
 
 **Criterio de conclusao:** uma tag de release consegue promover a imagem para

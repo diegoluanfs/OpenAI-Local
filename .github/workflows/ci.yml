@@ -90,6 +90,12 @@ jobs:
             docker compose --env-file deploy/.env.production \
             -f deploy/docker-compose.production.yml config --quiet
 
+      - name: Validate deployment scripts
+        shell: bash
+        run: |
+          sh -n deploy/scripts/staging-deploy.sh
+          sh -n deploy/scripts/staging-rollback.sh
+
       - name: Build Docker image
         run: docker build --tag local-llm-server:ci .
 

@@ -1,0 +1,58 @@
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Immutable image tag to deploy
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      IMAGE_TAG: ${{ inputs.image_tag || github.ref_name }}
+      IMAGE_REPOSITORY: ghcr.io/diegoluanfs/openai-local
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_USER: ${{ secrets.STAGING_USER }}
+      DEPLOY_PATH: ${{ secrets.STAGING_DEPLOY_PATH }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+
+      - name: Trust staging host
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$STAGING_HOST" >> ~/.ssh/known_hosts
+
+      - name: Prepare remote directory
+        run: |
+          ssh "$STAGING_USER@$STAGING_HOST" "mkdir -p '$DEPLOY_PATH/scripts' '$DEPLOY_PATH/secrets'"
+
+      - name: Upload deployment files
+        run: |
+          scp deploy/docker-compose.production.yml deploy/Caddyfile \
+            deploy/scripts/staging-deploy.sh deploy/scripts/staging-rollback.sh \
+            "$STAGING_USER@$STAGING_HOST:$DEPLOY_PATH/"
+          scp deploy/scripts/staging-deploy.sh deploy/scripts/staging-rollback.sh \
+            "$STAGING_USER@$STAGING_HOST:$DEPLOY_PATH/scripts/"
+
+      - name: Deploy and smoke test
+        run: |
+          ssh "$STAGING_USER@$STAGING_HOST" \
+            "IMAGE_TAG='$IMAGE_TAG' IMAGE_REPOSITORY='$IMAGE_REPOSITORY' DEPLOY_PATH='$DEPLOY_PATH' \
+            sh '$DEPLOY_PATH/scripts/staging-deploy.sh'"
