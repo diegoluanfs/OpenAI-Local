@@ -512,8 +512,15 @@ Suba o profile de tracing junto com a aplicacao:
 docker compose --profile tracing up --build -d
 ```
 
-O Jaeger fica disponivel em `http://localhost:16686`. O collector recebe OTLP
-por gRPC em `4317` e HTTP em `4318`.
+Para visualizar traces no Grafana, ative os dois profiles:
+
+```bash
+docker compose --profile monitoring --profile tracing up --build -d
+```
+
+Jaeger fica disponivel em `http://localhost:16686` e o dashboard de traces e
+provisionado no Grafana. O collector recebe OTLP por gRPC em `4317` e HTTP em
+`4318`.
 
 ### Sprints restantes
 
