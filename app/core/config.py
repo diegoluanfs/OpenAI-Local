@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 0
     inference_concurrency_limit: int = 2
     max_request_body_bytes: int = 1_048_576
+    rate_limit_backend: Literal["memory", "redis"] = "memory"
+    redis_url: str | None = None
+    redis_key_prefix: str = "local-llm:ratelimit"
 
     provider_name: str = Field(default="ollama", description="Future extension: vllm, lmstudio, llama_cpp")
 

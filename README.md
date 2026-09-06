@@ -76,6 +76,9 @@ Variaveis suportadas:
 - `ALLOW_ANONYMOUS_REQUESTS` (padrao: `true`; forcado para `false` em `production`)
 - `UNAUTH_RATE_LIMIT_PER_MINUTE` (padrao: `30`)
 - `MAX_REQUEST_BODY_BYTES` (padrao: `1048576` / 1 MiB)
+- `RATE_LIMIT_BACKEND` (padrao: `memory`; valores: `memory`, `redis`)
+- `REDIS_URL` (opcional; necessario quando `RATE_LIMIT_BACKEND=redis`)
+- `REDIS_KEY_PREFIX` (padrao: `local-llm:ratelimit`)
 
 ## Uso
 
@@ -229,6 +232,17 @@ ALLOW_ANONYMOUS_REQUESTS=false
 ```
 
 A aplicacao nao inicia em producao sem pelo menos uma chave configurada. Requisicoes sem API key recebem `401 API Key is required`.
+
+### Rate limit distribuido
+
+Para usar Redis em ambientes com mais de uma instancia, configure:
+
+```env
+RATE_LIMIT_BACKEND=redis
+REDIS_URL=redis://redis:6379/0
+```
+
+Se o Redis estiver indisponivel, o backend usa automaticamente o rate limiter em memoria como fallback para preservar a disponibilidade local.
 
 ## Metricas
 

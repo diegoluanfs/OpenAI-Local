@@ -1,13 +1,7 @@
 import hashlib
-import time
-from collections import defaultdict, deque
-
 from fastapi import Depends, Header, HTTPException, Request, status
 
 from app.container import AppContainer
-
-
-_unauth_request_buckets: dict[str, deque[float]] = defaultdict(deque)
 
 
 def get_container(request: Request) -> AppContainer:
@@ -62,19 +56,16 @@ async def validate_api_key(
                 "code": "api_key_required",
             },
         )
-
     # Anonymous requests are allowed, but throttled separately.
     if settings.unauth_rate_limit_per_minute <= 0:
         return
 
-    now = time.time()
-    window_start = now - 60
     client_ip = request.client.host if request.client else "unknown"
-    bucket = _unauth_request_buckets[client_ip]
-    while bucket and bucket[0] < window_start:
-        bucket.popleft()
-
-    if len(bucket) >= settings.unauth_rate_limit_per_minute:
+    allowed = await request.app.state.container.rate_limiter.allow(
+        key=f"anonymous:{client_ip}",
+        limit=settings.unauth_rate_limit_per_minute,
+    )
+    if not allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             headers={
@@ -89,4 +80,3 @@ async def validate_api_key(
             },
         )
 
-    bucket.append(now)

@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.api.dependencies import _unauth_request_buckets
 from app.core.config import Settings
 from app.infrastructure.repositories import InMemoryModelRepository
 from app.main import create_app
@@ -10,7 +9,6 @@ from tests.fakes import FakeProvider
 
 
 def _create_client() -> TestClient:
-    _unauth_request_buckets.clear()
     settings = Settings(
         auto_pull_default_model=False,
         unauth_rate_limit_per_minute=1,
@@ -22,6 +20,7 @@ def _create_client() -> TestClient:
         InMemoryModelRepository(FakeProvider(), "llama3.2:3b"),
         "nomic-embed-text",
     )
+    app.state.container.rate_limiter.clear()
     return TestClient(app)
 
 
