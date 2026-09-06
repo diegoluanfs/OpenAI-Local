@@ -52,7 +52,27 @@ jobs:
             "$STAGING_USER@$STAGING_HOST:$DEPLOY_PATH/scripts/"
 
       - name: Deploy and smoke test
+        id: deploy
+        continue-on-error: true
         run: |
           ssh "$STAGING_USER@$STAGING_HOST" \
             "IMAGE_TAG='$IMAGE_TAG' IMAGE_REPOSITORY='$IMAGE_REPOSITORY' DEPLOY_PATH='$DEPLOY_PATH' \
             sh '$DEPLOY_PATH/scripts/staging-deploy.sh'"
+
+      - name: Collect staging logs
+        if: always()
+        run: |
+          ssh "$STAGING_USER@$STAGING_HOST" \
+            "cd '$DEPLOY_PATH' && docker compose --env-file .env.production \
+            -f docker-compose.production.yml logs --no-color --tail=200" > staging-deploy.log 2>&1 || true
+
+      - name: Upload staging logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-deploy-logs-${{ github.run_id }}
+          path: staging-deploy.log
+
+      - name: Fail if deployment failed
+        if: steps.deploy.outcome == 'failure'
+        run: exit 1

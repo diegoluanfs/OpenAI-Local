@@ -516,11 +516,6 @@ Implementado parcialmente:
   `secrets/allowed_api_keys` sem versiona-los.
 - Garantir Docker, Compose, `curl`, DNS e portas necessarias no host.
 
-Pendencias da sprint:
-
-- Adicionar smoke tests de `/health/ready` e uma chamada autenticada.
-- Publicar logs e resultado do deploy como artefatos do workflow.
-
 **Criterio de conclusao:** uma tag de release consegue promover a imagem para
 staging e falha automaticamente se o health check ou o smoke test falhar.
 
