@@ -80,6 +80,12 @@ Base URL local:
 
 `http://localhost:8000/v1`
 
+Interface web:
+
+`http://localhost:8000/`
+
+A interface oferece chat direto com o modelo local, selecao de modelo, API key opcional, status do Ollama, limpeza da conversa e tempo da ultima resposta.
+
 Compatibilidade: para clientes que usam `https://api.openai.com/v1`, basta trocar `base_url` e, se necessario, chave.
 
 ### Endpoint publico sem login
@@ -151,6 +157,7 @@ Defina `"stream": true` no payload para receber `text/event-stream` no estilo Op
 
 ## Swagger e OpenAPI
 
+- Interface web: `http://localhost:8000/`
 - Swagger UI: `http://localhost:8000/docs`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 

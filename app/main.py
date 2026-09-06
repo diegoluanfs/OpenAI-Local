@@ -1,14 +1,16 @@
 import asyncio
 from datetime import datetime, timezone
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.middleware import InferenceConcurrencyMiddleware, MetricsMiddleware, RateLimitMiddleware
-from app.api.routes import ask, chat, completions, embeddings, health, metrics, models
+from app.api.routes import ask, chat, completions, embeddings, health, metrics, models, web
 from app.container import AppContainer
 from app.core.config import Settings, get_settings
 from app.core.exceptions import LocalLLMError
@@ -56,6 +58,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.container = AppContainer(settings)
+    web_directory = Path(__file__).resolve().parents[1] / "web"
+    app.mount("/web", StaticFiles(directory=web_directory), name="web")
 
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(MetricsMiddleware)
@@ -76,6 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(models.router)
     app.include_router(health.router)
     app.include_router(metrics.router)
+    app.include_router(web.router)
 
     logger = logging.getLogger("local_llm.app")
 

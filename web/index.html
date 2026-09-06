@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local LLM Server</title>
+  <link rel="stylesheet" href="/web/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">LL</span><div><strong>Local LLM</strong><small>workspace</small></div></div>
+      <div class="health"><span id="health-dot" class="dot"></span><span id="health-text">Checking service...</span></div>
+    </header>
+
+    <section class="workspace">
+      <aside class="sidebar">
+        <div class="eyebrow">Local inference</div>
+        <h1>Ask your local model.</h1>
+        <p class="muted">A focused console for private conversations running on your machine.</p>
+        <label for="model">Model</label>
+        <select id="model"><option value="">Loading models...</option></select>
+        <label for="api-key">API key <span>(optional)</span></label>
+        <input id="api-key" type="password" placeholder="X-API-Key">
+        <button id="clear-button" class="secondary" type="button">Clear conversation</button>
+        <div class="status-card"><span>Provider</span><strong id="provider-status">Ollama</strong><span>Default model</span><strong id="default-model">Loading...</strong></div>
+      </aside>
+
+      <section class="chat-panel">
+        <div id="messages" class="messages" aria-live="polite">
+          <div class="welcome"><span class="welcome-kicker">READY TO THINK</span><h2>What would you like to explore?</h2><p>Ask a question and the local model will answer without leaving your environment.</p></div>
+        </div>
+        <form id="ask-form" class="composer">
+          <textarea id="question" rows="2" placeholder="Ask anything..." required></textarea>
+          <div class="composer-footer"><span id="latency">Local · private · direct</span><button id="send-button" type="submit"><span>Send</span><span aria-hidden="true">↗</span></button></div>
+        </form>
+      </section>
+    </section>
+  </main>
+  <script src="/web/app.js"></script>
+</body>
+</html>
