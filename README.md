@@ -425,7 +425,12 @@ Pendente:
 - Gestao externa de secrets.
 - Grafana, alertas e tracing distribuido.
 
-Regras Prometheus iniciais estao versionadas em `monitoring/prometheus/alerts.yml` para:
+Configuracao Prometheus e regras iniciais estao versionadas em `monitoring/prometheus/`:
+
+- `prometheus.yml` configura o scrape de `local-llm-server:8000/metrics`.
+- `alerts.yml` define regras de disponibilidade, erro, latencia e readiness.
+
+As regras cobrem:
 
 - API indisponivel
 - taxa de erro acima de 5%
