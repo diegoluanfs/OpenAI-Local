@@ -42,6 +42,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
+        if self.provider_name != "ollama":
+            raise ValueError(
+                f"Unsupported provider '{self.provider_name}'. Registered providers: ollama"
+            )
         if self.app_env == "production" and not self.allowed_api_keys_set:
             raise ValueError("ALLOWED_API_KEYS must be configured when APP_ENV=production")
         if self.app_env == "production":
