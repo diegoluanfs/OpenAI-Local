@@ -9,7 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.middleware import InferenceConcurrencyMiddleware, MetricsMiddleware, RateLimitMiddleware
+from app.api.middleware import (
+    InferenceConcurrencyMiddleware,
+    MetricsMiddleware,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.api.routes import ask, chat, completions, embeddings, health, metrics, models, web
 from app.container import AppContainer
 from app.core.config import Settings, get_settings
@@ -62,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.mount("/web", StaticFiles(directory=web_directory), name="web")
 
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(MetricsMiddleware)
     app.add_middleware(InferenceConcurrencyMiddleware, limit=settings.inference_concurrency_limit)
     app.add_middleware(RateLimitMiddleware, limit_per_minute=settings.rate_limit_per_minute)

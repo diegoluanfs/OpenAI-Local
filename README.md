@@ -211,6 +211,7 @@ docker compose up --build -d
 - Suporte a API Key via `Authorization: Bearer <key>` ou `X-API-Key`
 - Requisicoes sem API key sao permitidas, mas limitadas por `UNAUTH_RATE_LIMIT_PER_MINUTE`
 - Inferencias simultaneas limitadas por `INFERENCE_CONCURRENCY_LIMIT`
+- Headers HTTP de seguranca para browser e API
 - CORS configuravel
 - Rate limit em memoria (opcional)
 

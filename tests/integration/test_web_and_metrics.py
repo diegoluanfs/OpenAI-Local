@@ -14,6 +14,9 @@ def test_web_interface_is_served():
 
     assert response.status_code == 200
     assert "Local LLM" in response.text
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "no-referrer"
     assert stylesheet.status_code == 200
     assert "--accent" in stylesheet.text
     assert script.status_code == 200
