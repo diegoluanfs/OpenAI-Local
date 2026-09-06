@@ -5,6 +5,7 @@ deploy/secrets/*
 __pycache__/
 .pytest_cache/
 .venv/
+.venv312/
 *.pyc
 *.pyo
 *.pyd
