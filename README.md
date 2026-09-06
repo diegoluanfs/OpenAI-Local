@@ -547,6 +547,7 @@ staging e falha automaticamente se o health check ou o smoke test falhar.
 Implementado parcialmente:
 
 - Workflow manual de producao em `.github/workflows/deploy-production.yml`.
+- Promocao exige o ID de uma execucao de staging bem-sucedida para a mesma tag.
 - Workflow manual de rollback em `.github/workflows/rollback-production.yml`.
 - GitHub Environment `production` usado como barreira de aprovacao.
 - Rollback para `.previous-image-tag` sem rebuild da imagem.
@@ -560,7 +561,7 @@ Implementado parcialmente:
 Pendencias da sprint:
 
 - Configurar aprovacao manual e branch protection no GitHub Environment.
-- Validar no processo operacional que apenas tags aprovadas em staging sejam promovidas.
+- Informar o `staging_run_id` aprovado ao iniciar o workflow de producao.
 
 **Criterio de conclusao:** uma promocao aprovada pode ser revertida para a ultima
 versao saudavel sem rebuild da imagem.
