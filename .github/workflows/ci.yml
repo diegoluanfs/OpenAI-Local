@@ -80,6 +80,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate production Compose configuration
+        shell: bash
+        run: |
+          mkdir -p deploy/secrets
+          printf 'ci-validation-key\n' > deploy/secrets/allowed_api_keys
+          cp deploy/.env.production.example deploy/.env.production
+          IMAGE_TAG=ci IMAGE_REPOSITORY=local-llm-server \
+            docker compose --env-file deploy/.env.production \
+            -f deploy/docker-compose.production.yml config --quiet
+
       - name: Build Docker image
         run: docker build --tag local-llm-server:ci .
 

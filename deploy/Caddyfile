@@ -1,0 +1,3 @@
+{$DOMAIN} {
+    reverse_proxy local-llm-server:8000
+}

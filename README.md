@@ -69,7 +69,7 @@ docker compose up --build
 
 Variaveis suportadas:
 
-- `APP_ENV` (padrao: `development`; valores: `development`, `test`, `production`)
+- `APP_ENV` (padrao: `development`; valores: `development`, `test`, `staging`, `production`)
 - `HOST` (padrao: `0.0.0.0`)
 - `PORT` (padrao: `8000`)
 - `OLLAMA_URL` (padrao: `http://ollama:11434`)
@@ -90,8 +90,8 @@ Variaveis suportadas:
 - `CORS_ORIGINS` (padrao: `*`)
 - `RATE_LIMIT_PER_MINUTE` (padrao: `0`, desabilitado)
 - `AUTO_PULL_DEFAULT_MODEL` (padrao: `true`)
-- `ALLOWED_API_KEYS` (obrigatorio em `production`; separado por virgulas)
-- `ALLOW_ANONYMOUS_REQUESTS` (padrao: `true`; forcado para `false` em `production`)
+- `ALLOWED_API_KEYS` (obrigatorio em `staging` e `production`; separado por virgulas)
+- `ALLOW_ANONYMOUS_REQUESTS` (padrao: `true`; forcado para `false` em `staging` e `production`)
 - `UNAUTH_RATE_LIMIT_PER_MINUTE` (padrao: `30`)
 - `MAX_REQUEST_BODY_BYTES` (padrao: `1048576` / 1 MiB)
 - `INFERENCE_CONCURRENCY_LIMIT` (padrao: `2`)
@@ -292,6 +292,32 @@ ALLOW_ANONYMOUS_REQUESTS=false
 
 A aplicacao nao inicia em producao sem pelo menos uma chave configurada. Requisicoes sem API key recebem `401 API Key is required`.
 
+### Deploy de producao com Compose
+
+O arquivo `deploy/docker-compose.production.yml` usa uma imagem versionada do GHCR,
+mantem Ollama e Redis sem portas publicas, monta as API keys como Docker secret e
+termina TLS automaticamente com Caddy.
+
+```bash
+cp deploy/.env.production.example deploy/.env.production
+mkdir -p deploy/secrets
+printf 'chave-secreta-1,chave-secreta-2\n' > deploy/secrets/allowed_api_keys
+export IMAGE_TAG=v1.0.0
+docker compose --env-file deploy/.env.production \
+  -f deploy/docker-compose.production.yml up -d
+```
+
+Configure o DNS de `DOMAIN` apontando para o servidor e mantenha as portas 80 e 443
+acessiveis. O Caddy solicita e renova os certificados automaticamente. Ollama,
+Redis e a porta interna da API nao sao publicados no host. Para rollback, altere
+`IMAGE_TAG` para uma tag anterior e recrie o servico:
+
+```bash
+export IMAGE_TAG=v0.9.0
+docker compose --env-file deploy/.env.production \
+  -f deploy/docker-compose.production.yml up -d local-llm-server
+```
+
 ### Rate limit distribuido
 
 Para usar Redis em ambientes com mais de uma instancia, configure:
@@ -435,11 +461,14 @@ Implementado parcialmente:
 
 Pendente:
 
-- Ambientes de staging e producao.
+- Deploy automatizado dos ambientes de staging e producao.
 - Rollback automatizado.
-- TLS via reverse proxy.
 - Gestao externa de secrets.
-- Grafana, alertas e tracing distribuido.
+- Tracing distribuido.
+
+O Compose de producao e o reverse proxy Caddy ja estao versionados em `deploy/`.
+O deploy ainda requer DNS, armazenamento dos secrets e uma plataforma para
+automatizar promocao, rollback e monitoramento externo.
 
 Configuracao Prometheus e regras iniciais estao versionadas em `monitoring/prometheus/`:
 
