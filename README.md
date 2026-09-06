@@ -602,6 +602,41 @@ Pendências da sprint:
 **Criterio de conclusao:** os limites operacionais estão medidos, documentados e
 aprovados para o ambiente de produção.
 
+#### Sprint 17: Ativacao final e encerramento
+
+Esta sprint consolida tudo que ainda depende de infraestrutura e evidencia
+operacional antes de declarar o projeto pronto para producao.
+
+**Configuracao de infraestrutura**
+
+- Criar e proteger os GitHub Environments `staging` e `production`.
+- Configurar aprovadores, branch protection e secrets SSH dos dois ambientes.
+- Provisionar hosts com Docker Compose, DNS, portas 80/443 e armazenamento persistente.
+- Configurar o backend externo de secrets e a rotina de rotacao de API keys.
+- Provisionar collector OTLP, backend de traces, dashboards, alertas e retencao.
+
+**Execucao controlada**
+
+- Executar deploy de uma tag em staging.
+- Validar liveness, readiness, autenticacao, TLS, fallback e logs sem vazamento.
+- Executar benchmark real de health, chat e streaming com cada provider disponivel.
+- Registrar throughput, p95/p99, primeiro byte, memoria e limites de concorrencia.
+- Executar um rollback em staging e confirmar a versao anterior saudavel.
+- Promover a mesma imagem aprovada para production com aprovacao manual.
+- Executar validacao pos-deploy e um exercicio de rollback em production.
+
+**Evidencias e encerramento**
+
+- Anexar relatorios de benchmark, logs e resultados dos workflows ao release.
+- Preencher `docs/production-readiness-checklist.md`.
+- Confirmar correlacao entre `X-Request-Id`, logs, metricas e traces.
+- Registrar imagem, digest, configuracoes, responsaveis e plano de incidente.
+- Atualizar o roadmap removendo as pendencias somente apos todas as evidencias.
+
+**Criterio de conclusao:** staging e production foram executados com a mesma
+imagem aprovada, rollback foi exercitado, secrets e traces estao operacionais,
+e o checklist de go-live esta completo e anexado ao release.
+
 Configuracao Prometheus e regras iniciais estao versionadas em `monitoring/prometheus/`:
 
 - `prometheus.yml` configura o scrape de `local-llm-server:8000/metrics`.
