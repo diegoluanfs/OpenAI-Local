@@ -46,9 +46,9 @@ jobs:
       - name: Upload deployment files
         run: |
           scp deploy/docker-compose.production.yml deploy/Caddyfile \
-            deploy/scripts/staging-deploy.sh deploy/scripts/staging-rollback.sh \
+            deploy/scripts/staging-deploy.sh deploy/scripts/staging-rollback.sh deploy/scripts/validate-secrets.sh \
             "$STAGING_USER@$STAGING_HOST:$DEPLOY_PATH/"
-          scp deploy/scripts/staging-deploy.sh deploy/scripts/staging-rollback.sh \
+          scp deploy/scripts/staging-deploy.sh deploy/scripts/staging-rollback.sh deploy/scripts/validate-secrets.sh \
             "$STAGING_USER@$STAGING_HOST:$DEPLOY_PATH/scripts/"
 
       - name: Deploy and smoke test

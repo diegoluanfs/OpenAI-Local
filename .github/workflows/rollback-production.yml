@@ -33,11 +33,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "$PRODUCTION_HOST" >> ~/.ssh/known_hosts
 
-      - name: Upload rollback script
+      - name: Upload rollback scripts
         run: |
           ssh "$PRODUCTION_USER@$PRODUCTION_HOST" "mkdir -p '$DEPLOY_PATH/scripts'"
-          scp deploy/scripts/staging-rollback.sh \
-            "$PRODUCTION_USER@$PRODUCTION_HOST:$DEPLOY_PATH/scripts/staging-rollback.sh"
+          scp deploy/scripts/staging-rollback.sh deploy/scripts/validate-secrets.sh \
+            "$PRODUCTION_USER@$PRODUCTION_HOST:$DEPLOY_PATH/scripts/"
 
       - name: Roll back and smoke test
         id: rollback

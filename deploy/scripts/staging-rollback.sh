@@ -5,6 +5,7 @@ set -eu
 DEPLOY_ENV="${DEPLOY_ENV:-staging}"
 
 cd "$DEPLOY_PATH"
+sh "$DEPLOY_PATH/scripts/validate-secrets.sh"
 if [ ! -s .previous-image-tag ]; then
     echo "No previous image tag is available" >&2
     exit 1

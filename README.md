@@ -544,6 +544,10 @@ versao saudavel sem rebuild da imagem.
 
 #### Sprint 14: Gestao externa de secrets
 
+- Validacao remota de existencia, formato e permissoes do arquivo de API keys.
+- Deploy e rollback falham antes do rollout quando o secret esta vazio ou exposto.
+- Chaves continuam fora da imagem, do repositorio e dos logs do workflow.
+
 - Escolher o backend de secrets da infraestrutura (GitHub Environment, Vault,
   cloud secret manager ou equivalente).
 - Remover secrets reais de arquivos locais e variaveis expostas no workflow.

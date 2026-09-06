@@ -15,6 +15,7 @@ if [ ! -f secrets/allowed_api_keys ]; then
     echo "Missing $DEPLOY_PATH/secrets/allowed_api_keys" >&2
     exit 1
 fi
+sh "$DEPLOY_PATH/scripts/validate-secrets.sh"
 
 if [ -f .deployed-image-tag ]; then
     cp .deployed-image-tag .previous-image-tag
