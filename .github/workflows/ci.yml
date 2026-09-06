@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Compile application
+        run: python -m compileall -q app
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Validate OpenAPI contract
+        run: |
+          python - <<'PY'
+          from app.main import app
+
+          schema = app.openapi()
+          required_paths = {
+              "/ask",
+              "/v1/chat/completions",
+              "/v1/completions",
+              "/v1/embeddings",
+              "/health",
+              "/health/live",
+              "/health/ready",
+          }
+          missing_paths = required_paths.difference(schema["paths"])
+          if missing_paths:
+              raise SystemExit(f"Missing OpenAPI paths: {sorted(missing_paths)}")
+          print(f"OpenAPI validated: {len(schema['paths'])} paths")
+          PY
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build --tag local-llm-server:ci .

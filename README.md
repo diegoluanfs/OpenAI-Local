@@ -127,6 +127,7 @@ Resposta esperada:
 - `GET /health`
 - `GET /health/live`
 - `GET /health/ready`
+- `GET /metrics` (Prometheus)
 
 ### Exemplo Chat Completion
 
@@ -200,8 +201,21 @@ docker compose up --build -d
 - Lista estatica de 10 API Keys para autorizacao (`ALLOWED_API_KEYS`)
 - Suporte a API Key via `Authorization: Bearer <key>` ou `X-API-Key`
 - Requisicoes sem API key sao permitidas, mas limitadas por `UNAUTH_RATE_LIMIT_PER_MINUTE`
+- Inferencias simultaneas limitadas por `INFERENCE_CONCURRENCY_LIMIT`
 - CORS configuravel
 - Rate limit em memoria (opcional)
+
+## Metricas
+
+O endpoint `GET /metrics` expoe metricas no formato Prometheus:
+
+- total de requisicoes por metodo, rota e status
+- duracao das requisicoes
+- total de requisicoes de inferencia
+
+Configuracao:
+
+- `INFERENCE_CONCURRENCY_LIMIT` (padrao: `2`)
 
 ## Contrato de Erro
 
@@ -253,6 +267,12 @@ Status atual da Sprint 2:
 - Limites de concorrencia por endpoint para proteger Ollama
 - Pipeline CI com validação de schema OpenAPI e smoke tests HTTP
 
+Implementado parcialmente:
+
+- Endpoint Prometheus `/metrics`
+- Metricas de requests, latencia e inferencia
+- Limite configuravel de concorrencia para `/ask` e `/v1/*`
+
 ## Testes
 
 Executar testes localmente:
@@ -261,6 +281,17 @@ Executar testes localmente:
 pip install -r requirements.txt
 pytest -q
 ```
+
+## CI
+
+O workflow `.github/workflows/ci.yml` executa automaticamente em pushes e pull requests para `main`:
+
+- compilacao do codigo Python
+- testes automatizados
+- validacao das rotas principais no OpenAPI
+- build da imagem Docker
+
+O endpoint operacional `/metrics` continua disponivel em runtime, mas fica oculto da lista do Swagger.
 
 ## Exemplos de Integracao
 

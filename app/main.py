@@ -7,8 +7,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.middleware import RateLimitMiddleware
-from app.api.routes import ask, chat, completions, embeddings, health, models
+from app.api.middleware import InferenceConcurrencyMiddleware, MetricsMiddleware, RateLimitMiddleware
+from app.api.routes import ask, chat, completions, embeddings, health, metrics, models
 from app.container import AppContainer
 from app.core.config import Settings, get_settings
 from app.core.exceptions import LocalLLMError
@@ -58,6 +58,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.container = AppContainer(settings)
 
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(MetricsMiddleware)
+    app.add_middleware(InferenceConcurrencyMiddleware, limit=settings.inference_concurrency_limit)
     app.add_middleware(RateLimitMiddleware, limit_per_minute=settings.rate_limit_per_minute)
     app.add_middleware(
         CORSMiddleware,
@@ -73,6 +75,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ask.router)
     app.include_router(models.router)
     app.include_router(health.router)
+    app.include_router(metrics.router)
 
     logger = logging.getLogger("local_llm.app")
 

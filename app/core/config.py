@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     unauth_rate_limit_per_minute: int = 30
     cors_origins: str = "*"
     rate_limit_per_minute: int = 0
+    inference_concurrency_limit: int = 2
 
     provider_name: str = Field(default="ollama", description="Future extension: vllm, lmstudio, llama_cpp")
 
