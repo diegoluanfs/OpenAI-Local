@@ -30,6 +30,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--api-key", default=os.getenv("API_KEY"))
     parser.add_argument("--stream", action="store_true")
+    parser.add_argument("--output", type=str, help="Write the JSON report to this path")
+    parser.add_argument("--sample-memory", action="store_true", help="Include memory_used_mb from /health")
     return parser.parse_args()
 
 
@@ -51,6 +53,13 @@ async def request_once(
     started = time.perf_counter()
     first_byte_at: float | None = None
     try:
+        if stream and path != "/v1/chat/completions":
+            return RequestResult(
+                duration_ms=0,
+                status_code=None,
+                error="--stream is only supported with /v1/chat/completions",
+            )
+
         if stream:
             async with client.stream("POST", path, json=payload) as response:
                 response.raise_for_status()
@@ -75,43 +84,37 @@ async def request_once(
     )
 
 
-async def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
+async def run_benchmark(args: argparse.Namespace, transport: httpx.AsyncBaseTransport | None = None) -> dict[str, Any]:
     if args.requests <= 0 or args.concurrency <= 0 or args.warmup < 0:
         raise ValueError("requests and concurrency must be positive; warmup cannot be negative")
 
     headers = {"Authorization": f"Bearer {args.api_key}"} if args.api_key else {}
     limits = httpx.Limits(max_connections=args.concurrency, max_keepalive_connections=args.concurrency)
     timeout = httpx.Timeout(args.timeout)
+    memory_used_mb: float | None = None
     async with httpx.AsyncClient(
         base_url=args.base_url.rstrip("/"),
         headers=headers,
         timeout=timeout,
         limits=limits,
+        transport=transport,
     ) as client:
         for _ in range(args.warmup):
             result = await request_once(client, args.path, args.model, args.stream)
             if result.error:
                 raise RuntimeError(f"Warmup failed: {result.error}")
 
-        queue: asyncio.Queue[int] = asyncio.Queue()
-        for index in range(args.requests):
-            queue.put_nowait(index)
-        results: list[RequestResult] = []
-        results_lock = asyncio.Lock()
+        semaphore = asyncio.Semaphore(min(args.concurrency, args.requests))
 
-        async def worker() -> None:
-            while not queue.empty():
-                await queue.get()
-                try:
-                    result = await request_once(client, args.path, args.model, args.stream)
-                    async with results_lock:
-                        results.append(result)
-                finally:
-                    queue.task_done()
+        async def bounded_request() -> RequestResult:
+            async with semaphore:
+                return await request_once(client, args.path, args.model, args.stream)
 
         started = time.perf_counter()
-        await asyncio.gather(*(worker() for _ in range(args.concurrency)))
+        results = await asyncio.gather(*(bounded_request() for _ in range(args.requests)))
         elapsed_seconds = time.perf_counter() - started
+        if args.sample_memory:
+            memory_used_mb = await sample_memory(client)
 
     successful = [result for result in results if result.error is None]
     durations = sorted(result.duration_ms for result in successful)
@@ -123,7 +126,8 @@ async def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         "failed": len(results) - len(successful),
         "concurrency": args.concurrency,
         "elapsed_seconds": round(elapsed_seconds, 3),
-        "throughput_requests_per_second": round(len(successful) / elapsed_seconds, 3) if elapsed_seconds else 0,
+        "completed_requests_per_second": round(len(results) / elapsed_seconds, 3) if elapsed_seconds else 0,
+        "successful_requests_per_second": round(len(successful) / elapsed_seconds, 3) if elapsed_seconds else 0,
         "latency_ms": latency_summary(durations),
     }
     if args.stream:
@@ -134,7 +138,19 @@ async def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     failures = [result.error for result in results if result.error]
     if failures:
         report["errors"] = failures[:5]
+    if memory_used_mb is not None:
+        report["memory_used_mb"] = memory_used_mb
     return report
+
+
+async def sample_memory(client: httpx.AsyncClient) -> float | None:
+    try:
+        response = await client.get("/health")
+        response.raise_for_status()
+        value = response.json().get("memory_used_mb")
+        return float(value) if value is not None else None
+    except (httpx.HTTPError, ValueError):
+        return None
 
 
 def latency_summary(values: list[float]) -> dict[str, float | None]:
@@ -154,6 +170,13 @@ def latency_summary(values: list[float]) -> dict[str, float | None]:
     }
 
 
+def write_report(report: dict[str, Any], output_path: str) -> None:
+    rendered_report = json.dumps(report, indent=2)
+    with open(output_path, "w", encoding="utf-8") as report_file:
+        report_file.write(rendered_report)
+        report_file.write("\n")
+
+
 def main() -> int:
     args = parse_args()
     try:
@@ -162,7 +185,10 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 2
 
-    print(json.dumps(report, indent=2))
+    rendered_report = json.dumps(report, indent=2)
+    print(rendered_report)
+    if args.output:
+        write_report(report, args.output)
     return 0 if report["failed"] == 0 else 1
 
 

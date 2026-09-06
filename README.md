@@ -437,14 +437,23 @@ Erros da API sao retornados no formato padrao:
 - Erros por rota e status HTTP.
 - Taxa de erro exibida na interface.
 
-### Proximas sprints
-
 #### Sprint 9: Performance e testes avancados
 
 - Testes de carga e concorrencia.
 - Testes de streaming e timeout.
 - Relatorios de performance.
 - Otimizacao de pool HTTP e uso de memoria.
+
+Implementado:
+
+- Testes de concorrencia e streaming com pytest.
+- Limite de inferencia mantido durante todo o ciclo de vida do streaming.
+- CLI `scripts/benchmark.py` com warmup, concorrencia, throughput, p95/p99,
+  tempo ate o primeiro byte, amostra de memoria e persistencia JSON.
+- Benchmark de health validado localmente; benchmark de inferencia real requer
+  Docker/Ollama ou outro provider ativo.
+
+### Proximas sprints
 
 #### Sprint 10: Providers alternativos
 
@@ -509,16 +518,18 @@ Para medir uma instancia em execucao, use `scripts/benchmark.py`. O relatorio JS
 inclui throughput, falhas, latencia minima, mediana, p95 e p99:
 
 ```powershell
+New-Item -ItemType Directory -Force reports | Out-Null
 python scripts/benchmark.py --path /health/live --requests 100 --concurrency 10
 python scripts/benchmark.py --path /v1/chat/completions --model llama3.2:3b `
-  --requests 20 --concurrency 2 --api-key sua-chave
+  --requests 20 --concurrency 2 --api-key sua-chave --output reports/chat.json
 python scripts/benchmark.py --path /v1/chat/completions --model llama3.2:3b `
-  --requests 10 --concurrency 2 --stream
+  --requests 10 --concurrency 2 --stream --sample-memory
 ```
 
 O benchmark executa warmup por padrao e retorna codigo diferente de zero quando
 alguma requisicao falha. Ajuste `--warmup`, `--timeout`, `--requests` e
-`--concurrency` conforme o ambiente. Para endpoints protegidos, prefira definir
+`--concurrency` conforme o ambiente. Use `--output` para salvar o relatorio JSON e
+`--sample-memory` para incluir `memory_used_mb` retornado por `/health`. Para endpoints protegidos, prefira definir
 `API_KEY` no ambiente em vez de expor a chave na linha de comando.
 
 ## CI
