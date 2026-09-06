@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.middleware import (
     InferenceConcurrencyMiddleware,
     MetricsMiddleware,
+    RequestBodyLimitMiddleware,
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
@@ -68,6 +69,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RequestBodyLimitMiddleware, max_body_bytes=settings.max_request_body_bytes)
     app.add_middleware(MetricsMiddleware)
     app.add_middleware(InferenceConcurrencyMiddleware, limit=settings.inference_concurrency_limit)
     app.add_middleware(RateLimitMiddleware, limit_per_minute=settings.rate_limit_per_minute)

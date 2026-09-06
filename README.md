@@ -75,6 +75,7 @@ Variaveis suportadas:
 - `ALLOWED_API_KEYS` (obrigatorio em `production`; separado por virgulas)
 - `ALLOW_ANONYMOUS_REQUESTS` (padrao: `true`; forcado para `false` em `production`)
 - `UNAUTH_RATE_LIMIT_PER_MINUTE` (padrao: `30`)
+- `MAX_REQUEST_BODY_BYTES` (padrao: `1048576` / 1 MiB)
 
 ## Uso
 
@@ -212,6 +213,8 @@ docker compose up --build -d
 - Requisicoes sem API key sao permitidas, mas limitadas por `UNAUTH_RATE_LIMIT_PER_MINUTE`
 - Inferencias simultaneas limitadas por `INFERENCE_CONCURRENCY_LIMIT`
 - Headers HTTP de seguranca para browser e API
+- Limite configuravel de tamanho do corpo das requisicoes
+- Logs registram apenas fingerprint da API Key, nunca a chave original
 - CORS configuravel
 - Rate limit em memoria (opcional)
 

@@ -86,3 +86,31 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'"
         return response
+
+
+class RequestBodyLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, max_body_bytes: int) -> None:
+        super().__init__(app)
+        self.max_body_bytes = max_body_bytes
+
+    async def dispatch(self, request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if self.max_body_bytes > 0 and content_length:
+            try:
+                body_size = int(content_length)
+            except ValueError:
+                body_size = 0
+
+            if body_size > self.max_body_bytes:
+                return JSONResponse(
+                    status_code=413,
+                    content={
+                        "error": {
+                            "message": "Request body exceeds configured limit",
+                            "type": "request_too_large",
+                            "code": "request_body_too_large",
+                        }
+                    },
+                )
+
+        return await call_next(request)

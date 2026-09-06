@@ -33,3 +33,13 @@ def test_metrics_endpoint_is_prometheus_compatible():
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
     assert "local_llm_requests_total" in response.text
+
+
+def test_request_body_limit_rejects_oversized_payload():
+    app = create_app(Settings(auto_pull_default_model=False, max_request_body_bytes=32))
+
+    with TestClient(app) as client:
+        response = client.post("/ask", json={"question": "x" * 100})
+
+    assert response.status_code == 413
+    assert response.json()["error"]["code"] == "request_body_too_large"

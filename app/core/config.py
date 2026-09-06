@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
     rate_limit_per_minute: int = 0
     inference_concurrency_limit: int = 2
+    max_request_body_bytes: int = 1_048_576
 
     provider_name: str = Field(default="ollama", description="Future extension: vllm, lmstudio, llama_cpp")
 

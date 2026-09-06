@@ -1,3 +1,4 @@
+import hashlib
 import time
 from collections import defaultdict, deque
 
@@ -46,9 +47,11 @@ async def validate_api_key(
                 },
             )
         request.state.is_authenticated = True
+        request.state.api_key_fingerprint = hashlib.sha256(token.encode("utf-8")).hexdigest()[:12]
         return
 
     request.state.is_authenticated = False
+    request.state.api_key_fingerprint = None
 
     if not settings.allow_anonymous_requests:
         raise HTTPException(

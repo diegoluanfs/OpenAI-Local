@@ -36,6 +36,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 "request_completed",
                 extra={
                     "request_id": request_id,
+                    "authenticated": getattr(request.state, "is_authenticated", False),
+                    "api_key_fingerprint": getattr(request.state, "api_key_fingerprint", None),
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": response.status_code,
@@ -51,6 +53,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 "request_failed",
                 extra={
                     "request_id": request_id,
+                    "authenticated": getattr(request.state, "is_authenticated", False),
+                    "api_key_fingerprint": getattr(request.state, "api_key_fingerprint", None),
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": 500,
