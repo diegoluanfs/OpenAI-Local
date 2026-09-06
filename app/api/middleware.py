@@ -5,7 +5,7 @@ from collections import defaultdict, deque
 from app.core.metrics import observe_request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, StreamingResponse
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -82,8 +82,28 @@ class InferenceConcurrencyMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-        async with self.semaphore:
-            return await call_next(request)
+        await self.semaphore.acquire()
+        try:
+            response = await call_next(request)
+        except Exception:
+            self.semaphore.release()
+            raise
+
+        if not isinstance(response, StreamingResponse):
+            self.semaphore.release()
+            return response
+
+        body_iterator = response.body_iterator
+
+        async def guarded_body():
+            try:
+                async for chunk in body_iterator:
+                    yield chunk
+            finally:
+                self.semaphore.release()
+
+        response.body_iterator = guarded_body()
+        return response
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
