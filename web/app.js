@@ -4,6 +4,7 @@ const questionInput = document.querySelector('#question');
 const messages = document.querySelector('#messages');
 const sendButton = document.querySelector('#send-button');
 const clearButton = document.querySelector('#clear-button');
+const exportButton = document.querySelector('#export-button');
 const apiKeyInput = document.querySelector('#api-key');
 const healthDot = document.querySelector('#health-dot');
 const healthText = document.querySelector('#health-text');
@@ -16,6 +17,8 @@ const requestCount = document.querySelector('#request-count');
 const inferenceCount = document.querySelector('#inference-count');
 const latencyStatus = document.querySelector('#latency-status');
 const streamToggle = document.querySelector('#stream-toggle');
+const conversationStorageKey = 'local-llm:conversation';
+const maxStoredMessages = 100;
 
 function restorePreferences() {
   modelSelect.value = localStorage.getItem('local-llm:model') || '';
@@ -27,6 +30,27 @@ function savePreferences() {
   localStorage.setItem('local-llm:stream', String(streamToggle.checked));
 }
 
+function saveConversation() {
+  const transcript = [...messages.querySelectorAll('.message')].map((message) => ({
+    role: message.classList.contains('user') ? 'user' : 'assistant',
+    content: message.querySelector('.bubble').textContent,
+  })).slice(-maxStoredMessages);
+  localStorage.setItem(conversationStorageKey, JSON.stringify(transcript));
+}
+
+function restoreConversation() {
+  try {
+    const transcript = JSON.parse(localStorage.getItem(conversationStorageKey) || '[]');
+    transcript.slice(-maxStoredMessages).forEach(({ role, content }) => addMessage(role, content));
+  } catch {
+    localStorage.removeItem(conversationStorageKey);
+  }
+}
+
+function getConversation() {
+  return JSON.parse(localStorage.getItem(conversationStorageKey) || '[]');
+}
+
 function addMessage(role, content) {
   const message = document.createElement('div');
   message.className = `message ${role}`;
@@ -35,6 +59,7 @@ function addMessage(role, content) {
   message.querySelector('.bubble').textContent = content;
   messages.appendChild(message);
   messages.scrollTop = messages.scrollHeight;
+  saveConversation();
   return message.querySelector('.bubble');
 }
 
@@ -78,6 +103,7 @@ async function streamChat(question, headers, model) {
       }
     });
   }
+  saveConversation();
 }
 
 function setHealth(online, text) {
@@ -198,7 +224,20 @@ streamToggle.addEventListener('change', savePreferences);
 
 clearButton.addEventListener('click', () => {
   messages.innerHTML = '<div class="welcome"><span class="welcome-kicker">READY TO THINK</span><h2>What would you like to explore?</h2><p>Ask a question and the local model will answer without leaving your environment.</p></div>';
+  localStorage.removeItem(conversationStorageKey);
   latency.textContent = 'Local · private · direct';
+});
+
+exportButton.addEventListener('click', () => {
+  const conversation = getConversation();
+  if (!conversation.length) return;
+  const blob = new Blob([JSON.stringify(conversation, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `local-llm-conversation-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
 });
 
 questionInput.addEventListener('keydown', (event) => {
@@ -211,3 +250,4 @@ questionInput.addEventListener('keydown', (event) => {
 loadStatus();
 loadMetrics();
 restorePreferences();
+restoreConversation();

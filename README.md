@@ -90,7 +90,16 @@ Interface web:
 
 `http://localhost:8000/`
 
-A interface oferece chat direto com o modelo local, selecao de modelo, API key opcional, status do Ollama, limpeza da conversa e tempo da ultima resposta.
+A interface oferece chat direto com o modelo local, selecao de modelo, API key opcional, status do Ollama, memoria usada, metricas operacionais e tempo da ultima resposta.
+
+Recursos da interface:
+
+- streaming opcional de respostas
+- historico local limitado a 100 mensagens
+- exportacao da conversa em JSON
+- modelo e modo streaming lembrados no navegador
+- API Key mantida somente em memoria, sem ser salva no `localStorage`
+- limpeza manual da conversa
 
 Compatibilidade: para clientes que usam `https://api.openai.com/v1`, basta trocar `base_url` e, se necessario, chave.
 
