@@ -12,14 +12,13 @@ def test_ollama_is_the_registered_provider():
 
 def test_lmstudio_is_supported_alongside_ollama():
     lmstudio = Settings(provider_name="lmstudio")
+    vllm = Settings(provider_name="vllm")
 
     assert lmstudio.provider_name == "lmstudio"
+    assert vllm.provider_name == "vllm"
 
 
 def test_unimplemented_providers_are_rejected():
-    with pytest.raises(ValidationError, match="provider_name"):
-        Settings(provider_name="vllm")
-
     with pytest.raises(ValidationError, match="provider_name"):
         Settings(provider_name="llama_cpp")
 

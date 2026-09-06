@@ -19,9 +19,12 @@ class AppContainer:
         self.settings = settings
         self.started_at = time.time()
 
-        if settings.provider_name == "lmstudio":
+        if settings.provider_name in {"lmstudio", "vllm"}:
+            compatible_url = (
+                settings.lmstudio_url if settings.provider_name == "lmstudio" else settings.vllm_url
+            )
             compatible_client = OpenAICompatibleClient(
-                base_url=settings.lmstudio_url,
+                base_url=compatible_url,
                 timeout_seconds=settings.timeout_seconds,
                 timeout_models_seconds=settings.timeout_tags_seconds,
                 timeout_chat_seconds=settings.timeout_chat_seconds,

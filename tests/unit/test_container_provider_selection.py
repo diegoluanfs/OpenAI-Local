@@ -14,3 +14,9 @@ def test_container_selects_lmstudio_when_configured():
     container = AppContainer(Settings(provider_name="lmstudio"))
 
     assert isinstance(container.provider, OpenAICompatibleProvider)
+
+
+def test_container_selects_openai_compatible_provider_for_vllm():
+    container = AppContainer(Settings(provider_name="vllm"))
+
+    assert isinstance(container.provider, OpenAICompatibleProvider)
