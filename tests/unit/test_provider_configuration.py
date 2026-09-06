@@ -20,6 +20,17 @@ def test_supported_alternative_providers_are_allowed():
     assert llama_cpp.provider_name == "llama_cpp"
 
 
+def test_staging_requires_api_keys_and_disables_anonymous_requests():
+    settings = Settings(app_env="staging", allowed_api_keys="staging-key")
+
+    assert settings.app_env == "staging"
+    assert settings.allow_anonymous_requests is False
+    assert "staging-key" in settings.allowed_api_keys_set
+
+    with pytest.raises(ValidationError, match="ALLOWED_API_KEYS"):
+        Settings(app_env="staging")
+
+
 def test_configurable_httpx_pool_limits_are_supported():
     settings = Settings(
         httpx_max_connections=42,

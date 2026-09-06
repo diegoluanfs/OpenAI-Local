@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    app_env: Literal["development", "test", "production"] = "development"
+    app_env: Literal["development", "test", "staging", "production"] = "development"
     app_name: str = "Local LLM Server"
     host: str = "0.0.0.0"
     port: int = 8000
@@ -80,9 +80,9 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"Unsupported provider '{self.provider_name}'. Registered providers: {sorted(supported_providers)}"
             )
-        if self.app_env == "production" and not self.allowed_api_keys_set:
-            raise ValueError("ALLOWED_API_KEYS must be configured when APP_ENV=production")
-        if self.app_env == "production":
+        if self.app_env in {"staging", "production"} and not self.allowed_api_keys_set:
+            raise ValueError("ALLOWED_API_KEYS must be configured when APP_ENV is staging or production")
+        if self.app_env in {"staging", "production"}:
             self.allow_anonymous_requests = False
         return self
 
