@@ -587,11 +587,17 @@ a ponta nos logs, metricas e traces.
 
 #### Sprint 16: Validação final de produção
 
-- Executar benchmark de inferência real com Ollama, LM Studio e/ou vLLM ativos.
-- Registrar throughput, p95/p99, tempo até o primeiro token e memória.
-- Executar teste de carga com limites de concorrência e pool definidos.
-- Validar expiração/renovação TLS, readiness, fallback e rollback.
-- Criar checklist de go-live e relatório final de capacidade.
+Implementado parcialmente:
+
+- Workflow manual de validação em `.github/workflows/validate-production.yml`.
+- Checks de liveness, readiness e endpoint autenticado.
+- Relatórios JSON de benchmark publicados como artefatos.
+- Checklist de go-live em `docs/production-readiness-checklist.md`.
+
+Pendências da sprint:
+
+- Executar o workflow contra ambientes reais.
+- Anexar os resultados aprovados ao release.
 
 **Criterio de conclusao:** os limites operacionais estão medidos, documentados e
 aprovados para o ambiente de produção.
