@@ -251,3 +251,7 @@ loadStatus();
 loadMetrics();
 restorePreferences();
 restoreConversation();
+setInterval(() => {
+  loadStatus();
+  loadMetrics();
+}, 15000);

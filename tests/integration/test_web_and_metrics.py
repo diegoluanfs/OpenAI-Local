@@ -21,6 +21,12 @@ def test_web_interface_is_served():
     assert "--accent" in stylesheet.text
     assert script.status_code == 200
     assert "loadStatus" in script.text
+    assert "export-button" in response.text
+    assert "stream-toggle" in response.text
+    assert "local-llm:conversation" in script.text
+    assert "maxStoredMessages = 100" in script.text
+    assert "setInterval" in script.text
+    assert "15000" in script.text
 
 
 def test_metrics_endpoint_is_prometheus_compatible():
