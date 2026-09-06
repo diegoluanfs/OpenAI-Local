@@ -3,6 +3,7 @@ set -eu
 
 : "${IMAGE_TAG:?IMAGE_TAG must be set}"
 : "${DEPLOY_PATH:?DEPLOY_PATH must be set}"
+DEPLOY_ENV="${DEPLOY_ENV:-staging}"
 
 cd "$DEPLOY_PATH"
 
@@ -41,12 +42,12 @@ for attempt in $(seq 1 30); do
         && curl --fail --silent --show-error "$base_url/health/ready" >/dev/null \
         && curl --fail --silent --show-error \
             -H "Authorization: Bearer $api_key" "$base_url/v1/models" >/dev/null; then
-        echo "Staging deployment healthy and authenticated: $IMAGE_TAG"
+        echo "$DEPLOY_ENV deployment healthy and authenticated: $IMAGE_TAG"
         exit 0
     fi
     sleep 2
 done
 
-echo "Staging deployment did not become healthy" >&2
+echo "$DEPLOY_ENV deployment did not become healthy" >&2
 $compose logs --tail=100 local-llm-server caddy >&2
 exit 1

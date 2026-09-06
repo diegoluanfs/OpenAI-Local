@@ -521,11 +521,23 @@ staging e falha automaticamente se o health check ou o smoke test falhar.
 
 #### Sprint 13: Deploy de producao e rollback
 
-- Criar GitHub Environment `production` com aprovacao manual obrigatoria.
-- Promover para producao somente uma imagem ja validada em staging.
-- Registrar a versao atualmente implantada antes de cada rollout.
-- Implementar rollback para a ultima versao saudavel em caso de falha.
-- Adicionar smoke test pos-deploy e procedimento de rollback manual documentado.
+Implementado parcialmente:
+
+- Workflow manual de producao em `.github/workflows/deploy-production.yml`.
+- Workflow manual de rollback em `.github/workflows/rollback-production.yml`.
+- GitHub Environment `production` usado como barreira de aprovacao.
+- Rollback para `.previous-image-tag` sem rebuild da imagem.
+- Smoke tests e artefatos de logs em deploy e rollback.
+
+- Configurar no Environment `production` os secrets `PRODUCTION_HOST`,
+  `PRODUCTION_USER`, `PRODUCTION_SSH_KEY` e `PRODUCTION_DEPLOY_PATH`.
+- Configurar aprovadores obrigatorios e branch protection no Environment.
+- Promover somente tags ja validadas em staging.
+
+Pendencias da sprint:
+
+- Configurar aprovacao manual e branch protection no GitHub Environment.
+- Validar no processo operacional que apenas tags aprovadas em staging sejam promovidas.
 
 **Criterio de conclusao:** uma promocao aprovada pode ser revertida para a ultima
 versao saudavel sem rebuild da imagem.

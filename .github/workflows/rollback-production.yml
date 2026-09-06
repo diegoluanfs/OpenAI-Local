@@ -1,0 +1,66 @@
+name: Rollback production
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_ENV: production
+      PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+      PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+      DEPLOY_PATH: ${{ secrets.PRODUCTION_DEPLOY_PATH }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+      - name: Trust production host
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$PRODUCTION_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload rollback script
+        run: |
+          ssh "$PRODUCTION_USER@$PRODUCTION_HOST" "mkdir -p '$DEPLOY_PATH/scripts'"
+          scp deploy/scripts/staging-rollback.sh \
+            "$PRODUCTION_USER@$PRODUCTION_HOST:$DEPLOY_PATH/scripts/staging-rollback.sh"
+
+      - name: Roll back and smoke test
+        id: rollback
+        continue-on-error: true
+        run: |
+          ssh "$PRODUCTION_USER@$PRODUCTION_HOST" \
+            "DEPLOY_ENV='$DEPLOY_ENV' DEPLOY_PATH='$DEPLOY_PATH' \
+            sh '$DEPLOY_PATH/scripts/staging-rollback.sh'"
+
+      - name: Collect rollback logs
+        if: always()
+        run: |
+          ssh "$PRODUCTION_USER@$PRODUCTION_HOST" \
+            "cd '$DEPLOY_PATH' && docker compose --env-file .env.production \
+            -f docker-compose.production.yml logs --no-color --tail=200" > production-rollback.log 2>&1 || true
+
+      - name: Upload rollback logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-rollback-logs-${{ github.run_id }}
+          path: production-rollback.log
+
+      - name: Fail if rollback failed
+        if: steps.rollback.outcome == 'failure'
+        run: exit 1
