@@ -24,6 +24,7 @@
         <input id="api-key" type="password" placeholder="X-API-Key">
         <button id="clear-button" class="secondary" type="button">Clear conversation</button>
         <div class="status-card"><span>Provider</span><strong id="provider-status">Ollama</strong><span>Default model</span><strong id="default-model">Loading...</strong><span>Memory</span><strong id="memory-status">—</strong></div>
+        <div class="metrics-card"><div><span>Requests</span><strong id="request-count">—</strong></div><div><span>Inference</span><strong id="inference-count">—</strong></div><div><span>Avg latency</span><strong id="latency-status">—</strong></div></div>
       </aside>
 
       <section class="chat-panel">
@@ -32,7 +33,7 @@
         </div>
         <form id="ask-form" class="composer">
           <textarea id="question" rows="2" placeholder="Ask anything..." required></textarea>
-          <div class="composer-footer"><span id="latency">Local · private · direct</span><button id="send-button" type="submit"><span>Send</span><span aria-hidden="true">↗</span></button></div>
+          <div class="composer-footer"><label class="toggle"><input id="stream-toggle" type="checkbox"><span>Stream</span></label><span id="latency">Local · private · direct</span><button id="send-button" type="submit"><span>Send</span><span aria-hidden="true">↗</span></button></div>
         </form>
       </section>
     </section>

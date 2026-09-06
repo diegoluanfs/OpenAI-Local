@@ -12,6 +12,10 @@ const defaultModel = document.querySelector('#default-model');
 const memoryStatus = document.querySelector('#memory-status');
 const refreshModels = document.querySelector('#refresh-models');
 const latency = document.querySelector('#latency');
+const requestCount = document.querySelector('#request-count');
+const inferenceCount = document.querySelector('#inference-count');
+const latencyStatus = document.querySelector('#latency-status');
+const streamToggle = document.querySelector('#stream-toggle');
 
 function addMessage(role, content) {
   const message = document.createElement('div');
@@ -21,12 +25,79 @@ function addMessage(role, content) {
   message.querySelector('.bubble').textContent = content;
   messages.appendChild(message);
   messages.scrollTop = messages.scrollHeight;
+  return message.querySelector('.bubble');
+}
+
+async function streamChat(question, headers, model) {
+  const response = await fetch('/v1/chat/completions', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      question,
+      model,
+      messages: [{ role: 'user', content: question }],
+      stream: true,
+    }),
+  });
+  if (!response.ok || !response.body) {
+    const payload = await response.json();
+    throw new Error(payload.error?.message || 'Streaming request failed');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let answer = '';
+  const bubble = addMessage('assistant', '');
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const events = buffer.split('\n\n');
+    buffer = events.pop() || '';
+    events.forEach((event) => {
+      const line = event.split('\n').find((item) => item.startsWith('data: '));
+      if (!line || line === 'data: [DONE]') return;
+      try {
+        const payload = JSON.parse(line.slice(6));
+        answer += payload.choices?.[0]?.delta?.content || '';
+        bubble.textContent = answer;
+        messages.scrollTop = messages.scrollHeight;
+      } catch {
+        // Ignore incomplete SSE frames.
+      }
+    });
+  }
 }
 
 function setHealth(online, text) {
   healthDot.className = `dot ${online ? 'ok' : 'bad'}`;
   healthText.textContent = text;
   providerStatus.textContent = online ? 'Ollama online' : 'Ollama offline';
+}
+
+function metricValue(metrics, name) {
+  const match = metrics.match(new RegExp(`^${name}(?:\\{[^\\n]*\\})?\\s+([0-9.e+-]+)$`, 'm'));
+  return match ? Number(match[1]) : 0;
+}
+
+async function loadMetrics() {
+  try {
+    const response = await fetch('/metrics');
+    if (!response.ok) return;
+    const metrics = await response.text();
+    const requests = metricValue(metrics, 'local_llm_requests_total');
+    const inferences = metricValue(metrics, 'local_llm_inference_requests_total');
+    const duration = metricValue(metrics, 'local_llm_request_duration_seconds_sum');
+    const count = metricValue(metrics, 'local_llm_request_duration_seconds_count');
+    requestCount.textContent = requests.toLocaleString('en-US');
+    inferenceCount.textContent = inferences.toLocaleString('en-US');
+    latencyStatus.textContent = count ? `${Math.round((duration / count) * 1000)} ms` : '—';
+  } catch {
+    requestCount.textContent = '—';
+    inferenceCount.textContent = '—';
+    latencyStatus.textContent = '—';
+  }
 }
 
 async function loadStatus() {
@@ -66,6 +137,7 @@ refreshModels.addEventListener('click', async () => {
   refreshModels.disabled = true;
   try {
     await loadStatus();
+    await loadMetrics();
   } finally {
     refreshModels.disabled = false;
   }
@@ -83,6 +155,11 @@ form.addEventListener('submit', async (event) => {
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (apiKeyInput.value.trim()) headers['X-API-Key'] = apiKeyInput.value.trim();
+    if (streamToggle.checked) {
+      await streamChat(question, headers, modelSelect.value || undefined);
+      latency.textContent = `${Math.round(performance.now() - startedAt)} ms · streaming`;
+      return;
+    }
     const response = await fetch('/ask', {
       method: 'POST',
       headers,
@@ -114,3 +191,4 @@ questionInput.addEventListener('keydown', (event) => {
 });
 
 loadStatus();
+loadMetrics();
