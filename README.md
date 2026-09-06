@@ -182,12 +182,28 @@ Servicos no `docker-compose.yml`:
 
 - `ollama`: runtime de modelos locais
 - `local-llm-server`: API FastAPI
+- `redis`: opcional, habilitado pelo profile `redis`
 
 Volume persistente:
 
 - `ollama_data` para manter os modelos baixados entre reinicializacoes
+- `redis_data` para manter o estado do Redis quando o profile estiver ativo
 
 Ao subir pela primeira vez, a API tenta baixar automaticamente o `DEFAULT_MODEL` se ele nao estiver instalado.
+
+Execucao padrao (rate limit em memoria):
+
+```bash
+docker compose up --build -d
+```
+
+Execucao com Redis (rate limit compartilhado):
+
+```bash
+docker compose --profile redis up --build -d
+```
+
+Para usar o Redis na API, configure `RATE_LIMIT_BACKEND=redis` e `REDIS_URL=redis://redis:6379/0` no `.env`.
 
 ## Troca de Modelo
 
