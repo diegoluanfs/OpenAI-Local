@@ -268,6 +268,7 @@ O endpoint `GET /metrics` expoe metricas no formato Prometheus:
 - total de requisicoes por metodo, rota e status
 - duracao das requisicoes
 - total de requisicoes de inferencia
+- total de tokens por modelo e tipo (`prompt` ou `completion`)
 
 Configuracao:
 

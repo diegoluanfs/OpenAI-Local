@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 from app.core.exceptions import ModelNotFoundError, ProviderUnavailableError
+from app.core.metrics import observe_tokens
 from app.domain.interfaces import LLMProvider, ModelRepository
 from app.schemas.openai import AskRequest, ChatCompletionRequest, CompletionRequest, EmbeddingRequest
 
@@ -32,6 +33,7 @@ class LLMService:
 
         content = response.get("message", {}).get("content", "")
         usage = self._extract_usage(response)
+        observe_tokens(model, usage["prompt_tokens"], usage["completion_tokens"])
         self._logger.info("chat_completed", extra={"model": model, "usage": usage})
         return {
             "id": f"chatcmpl-{uuid.uuid4().hex[:12]}",
@@ -92,6 +94,7 @@ class LLMService:
         assert isinstance(response, dict)
         text = response.get("response", "")
         usage = self._extract_usage(response)
+        observe_tokens(model, usage["prompt_tokens"], usage["completion_tokens"])
         self._logger.info("completion_completed", extra={"model": model, "usage": usage})
 
         return {

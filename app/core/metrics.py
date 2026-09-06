@@ -18,6 +18,11 @@ INFERENCE_REQUESTS_TOTAL = Counter(
     "Total de requisicoes de inferencia.",
     ["path", "status"],
 )
+TOKENS_TOTAL = Counter(
+    "local_llm_tokens_total",
+    "Total de tokens reportados pelo provider.",
+    ["model", "type"],
+)
 
 
 def observe_request(method: str, path: str, status_code: int, started_at: float) -> None:
@@ -28,3 +33,8 @@ def observe_request(method: str, path: str, status_code: int, started_at: float)
 
     if path == "/ask" or path.startswith("/v1/"):
         INFERENCE_REQUESTS_TOTAL.labels(path=path, status=status).inc()
+
+
+def observe_tokens(model: str, prompt_tokens: int, completion_tokens: int) -> None:
+    TOKENS_TOTAL.labels(model=model, type="prompt").inc(prompt_tokens)
+    TOKENS_TOTAL.labels(model=model, type="completion").inc(completion_tokens)
