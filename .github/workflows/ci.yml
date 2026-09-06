@@ -82,3 +82,16 @@ jobs:
 
       - name: Build Docker image
         run: docker build --tag local-llm-server:ci .
+
+      - name: Smoke test Docker image
+        run: |
+          docker run --detach --name local-llm-server-ci --publish 8000:8000 local-llm-server:ci
+          trap 'docker rm --force local-llm-server-ci' EXIT
+          for attempt in {1..20}; do
+            if docker run --rm --network host python:3.12-slim python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live')"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs local-llm-server-ci
+          exit 1
