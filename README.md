@@ -410,8 +410,15 @@ Erros da API sao retornados no formato padrao:
 
 #### Sprint 11: Deploy e operacao de producao
 
-- Pipeline de CD.
-- Registry de imagens e versionamento.
+Implementado parcialmente:
+
+- Workflow de release em `.github/workflows/release.yml`.
+- Publicacao automatica de imagens no GHCR para tags `v*`.
+- Tags versionadas e tag `latest`.
+- Health check da imagem Docker na CI.
+
+Pendente:
+
 - Ambientes de staging e producao.
 - Rollback automatizado.
 - TLS via reverse proxy.
@@ -448,6 +455,22 @@ O workflow `.github/workflows/ci.yml` executa automaticamente em pushes e pull r
 - build da imagem Docker
 
 O endpoint operacional `/metrics` continua disponivel em runtime, mas fica oculto da lista do Swagger.
+
+## Release de Imagem
+
+Para publicar uma imagem no GitHub Container Registry, crie e envie uma tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+O workflow publica:
+
+```text
+ghcr.io/diegoluanfs/openai-local:v1.0.0
+ghcr.io/diegoluanfs/openai-local:latest
+```
 
 ## Exemplos de Integracao
 
