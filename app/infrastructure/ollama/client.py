@@ -132,7 +132,7 @@ class OllamaClient:
         self._raise_for_status(response, model)
         return response.json()
 
-    async def _stream_json(
+    def _stream_json(
         self,
         path: str,
         payload: dict[str, Any],

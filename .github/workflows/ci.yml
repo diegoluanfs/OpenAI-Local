@@ -28,6 +28,9 @@ jobs:
       - name: Run Ruff
         run: ruff check app tests
 
+      - name: Run mypy
+        run: mypy app tests --ignore-missing-imports --no-error-summary
+
       - name: Run tests
         run: pytest -q --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=70
 

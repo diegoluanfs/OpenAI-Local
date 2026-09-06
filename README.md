@@ -313,6 +313,7 @@ O workflow `.github/workflows/ci.yml` executa automaticamente em pushes e pull r
 
 - compilacao do codigo Python
 - lint com Ruff
+- verificacao de tipos com mypy
 - testes automatizados
 - relatorio de cobertura de testes (`coverage.xml`)
 - cobertura minima exigida de 70%

@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime, timezone
 import logging
 from pathlib import Path
+from typing import Any, Mapping, Sequence
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -35,8 +36,8 @@ def _error_response(
     message: str,
     error_type: str,
     code: str,
-    details: list[dict] | None = None,
-    headers: dict[str, str] | None = None,
+    details: Sequence[Mapping[str, Any]] | None = None,
+    headers: Mapping[str, str] | None = None,
 ) -> JSONResponse:
     request_id = getattr(request.state, "request_id", None)
     payload = {
