@@ -499,6 +499,22 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
 
 O collector e o backend de traces continuam sendo responsabilidade da infraestrutura.
 
+Para testar tracing localmente com OpenTelemetry Collector e Jaeger:
+
+```env
+TRACING_ENABLED=true
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+```
+
+Suba o profile de tracing junto com a aplicacao:
+
+```bash
+docker compose --profile tracing up --build -d
+```
+
+O Jaeger fica disponivel em `http://localhost:16686`. O collector recebe OTLP
+por gRPC em `4317` e HTTP em `4318`.
+
 ### Sprints restantes
 
 #### Sprint 12: Deploy automatizado de staging

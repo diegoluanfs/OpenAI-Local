@@ -77,6 +77,29 @@ services:
       prometheus:
         condition: service_started
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.57.0
+    container_name: local-llm-jaeger
+    profiles: ["tracing"]
+    ports:
+      - "16686:16686"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.105.0
+    container_name: local-llm-otel-collector
+    profiles: ["tracing"]
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./monitoring/otel/collector-config.yml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on:
+      jaeger:
+        condition: service_started
+
 volumes:
   ollama_data:
   redis_data:

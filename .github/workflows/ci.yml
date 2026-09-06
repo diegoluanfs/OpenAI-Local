@@ -89,6 +89,7 @@ jobs:
           IMAGE_TAG=ci IMAGE_REPOSITORY=local-llm-server \
             docker compose --env-file deploy/.env.production \
             -f deploy/docker-compose.production.yml config --quiet
+          docker compose --profile tracing config --quiet
 
       - name: Validate deployment scripts
         shell: bash
