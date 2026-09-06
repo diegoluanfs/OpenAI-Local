@@ -425,6 +425,13 @@ Pendente:
 - Gestao externa de secrets.
 - Grafana, alertas e tracing distribuido.
 
+Regras Prometheus iniciais estao versionadas em `monitoring/prometheus/alerts.yml` para:
+
+- API indisponivel
+- taxa de erro acima de 5%
+- latencia p95 acima de 10 segundos
+- falhas de readiness
+
 ## Testes
 
 Executar testes localmente:

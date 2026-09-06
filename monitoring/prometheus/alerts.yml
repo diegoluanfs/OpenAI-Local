@@ -1,0 +1,38 @@
+groups:
+  - name: local-llm-server
+    rules:
+      - alert: LocalLLMServerDown
+        expr: up{job="local-llm-server"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Local LLM Server is down
+          description: The local-llm-server target has been unavailable for more than two minutes.
+
+      - alert: LocalLLMHighErrorRate
+        expr: rate(local_llm_errors_total[5m]) / clamp_min(rate(local_llm_requests_total[5m]), 1) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Local LLM Server error rate is high
+          description: More than 5 percent of requests have failed during the last five minutes.
+
+      - alert: LocalLLMHighLatency
+        expr: histogram_quantile(0.95, rate(local_llm_request_duration_seconds_bucket[5m])) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Local LLM Server latency is high
+          description: The p95 request latency has exceeded ten seconds for ten minutes.
+
+      - alert: LocalLLMReadinessFailure
+        expr: local_llm_requests_total{path="/health/ready",status=~"5.."} > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Local LLM Server readiness is failing
+          description: Readiness requests have returned server errors.
