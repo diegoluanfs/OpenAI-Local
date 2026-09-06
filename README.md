@@ -8,6 +8,9 @@ Servidor de IA local com API REST compativel com a OpenAI, usando FastAPI + Olla
 - Endpoints OpenAI-like: `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings`
 - Gerenciamento de modelos: listagem, modelo padrao, pull e status
 - Health check com estado da API e Ollama
+- Interface web local para chat e operacao
+- Rate limiting em memoria ou Redis
+- Metricas Prometheus e CI com quality gates
 - Arquitetura desacoplada para trocar provider no futuro
 - Docker Compose com persistencia de modelos
 
@@ -31,8 +34,14 @@ app/
   domain/
   infrastructure/
     ollama/
+    rate_limiter.py
+    redis_rate_limiter.py
   services/
   schemas/
+web/
+  index.html
+  app.js
+  styles.css
   main.py
 ```
 
@@ -68,6 +77,12 @@ Variaveis suportadas:
 - `EMBEDDING_MODEL` (padrao: `nomic-embed-text`)
 - `LOG_LEVEL` (padrao: `INFO`)
 - `TIMEOUT_SECONDS` (padrao: `120`)
+- `TIMEOUT_TAGS_SECONDS` (padrao: `10`)
+- `TIMEOUT_CHAT_SECONDS` (padrao: `120`)
+- `TIMEOUT_GENERATE_SECONDS` (padrao: `120`)
+- `TIMEOUT_EMBEDDINGS_SECONDS` (padrao: `60`)
+- `TIMEOUT_PULL_SECONDS` (padrao: `0`, sem timeout)
+- `MODEL_CACHE_TTL_SECONDS` (padrao: `5`)
 - `API_KEY` (opcional)
 - `CORS_ORIGINS` (padrao: `*`)
 - `RATE_LIMIT_PER_MINUTE` (padrao: `0`, desabilitado)
@@ -76,6 +91,7 @@ Variaveis suportadas:
 - `ALLOW_ANONYMOUS_REQUESTS` (padrao: `true`; forcado para `false` em `production`)
 - `UNAUTH_RATE_LIMIT_PER_MINUTE` (padrao: `30`)
 - `MAX_REQUEST_BODY_BYTES` (padrao: `1048576` / 1 MiB)
+- `INFERENCE_CONCURRENCY_LIMIT` (padrao: `2`)
 - `RATE_LIMIT_BACKEND` (padrao: `memory`; valores: `memory`, `redis`)
 - `REDIS_URL` (opcional; necessario quando `RATE_LIMIT_BACKEND=redis`)
 - `REDIS_KEY_PREFIX` (padrao: `local-llm:ratelimit`)
@@ -310,42 +326,95 @@ Erros da API sao retornados no formato padrao:
 
 ## Roadmap de Sprints
 
-### Sprint 1 (concluida)
+### Sprints concluidas
 
-- Error envelope padronizado em todos os handlers globais
-- Correlation ID por request com header de resposta `X-Request-Id`
-- Endpoints operacionais `GET /health/live` e `GET /health/ready`
+#### Sprint 1: Operacao e erros
 
-### Sprint 2 (proxima)
+- Error envelope padronizado.
+- Correlation ID via `X-Request-Id`.
+- Logs estruturados e tempo de resposta.
+- `/health`, `/health/live` e `/health/ready`.
 
-- Cache de status/lista de modelos com invalidação simples
-- Timeouts por operacao de provider e fallback de erro mais especifico
-- Testes de contrato OpenAPI para `/ask` e `/v1/chat/completions`
+#### Sprint 2: Cache e resiliencia do provider
 
-Status atual da Sprint 2:
+- Cache de modelos com TTL e invalidacao apos pull.
+- Timeouts por operacao do Ollama.
+- Fallback de erro do provider.
+- Testes de contrato OpenAPI.
 
-- Implementado cache de modelos com TTL (`MODEL_CACHE_TTL_SECONDS`) e invalidação apos `POST /v1/models/pull`
-- Implementados timeouts por operacao no provider Ollama:
-  - `TIMEOUT_TAGS_SECONDS`
-  - `TIMEOUT_CHAT_SECONDS`
-  - `TIMEOUT_GENERATE_SECONDS`
-  - `TIMEOUT_EMBEDDINGS_SECONDS`
-  - `TIMEOUT_PULL_SECONDS` (0 = sem timeout)
-- Implementados testes de contrato:
-  - `tests/integration/test_contracts.py`
-  - `tests/unit/test_model_repository_cache.py`
+#### Sprint 3: Observabilidade, concorrencia e CI
 
-### Sprint 3
+- `/metrics` com Prometheus.
+- Metricas de requests, latencia, inferencia, tokens e erros.
+- Limite de concorrencia para inferencia.
+- CI com build Docker, OpenAPI, Ruff, mypy, testes e cobertura.
 
-- Metricas Prometheus (latencia, taxa de erro, requests, tokens)
-- Limites de concorrencia por endpoint para proteger Ollama
-- Pipeline CI com validação de schema OpenAPI e smoke tests HTTP
+#### Sprint 4: Seguranca e hardening
 
-Implementado parcialmente:
+- Allowlist configuravel de API Keys.
+- Exigencia de chaves em producao.
+- Rate limit anonimo e headers `Retry-After`.
+- Limite de payload.
+- Headers HTTP de seguranca.
+- Fingerprint de API Key nos logs, sem expor o segredo.
 
-- Endpoint Prometheus `/metrics`
-- Metricas de requests, latencia e inferencia
-- Limite configuravel de concorrencia para `/ask` e `/v1/*`
+#### Sprint 5: Qualidade automatizada
+
+- Ruff no CI.
+- Mypy no CI.
+- Cobertura minima de 70%.
+- Relatorio `coverage.xml` como artefato da CI.
+
+#### Sprint 6: Rate limit distribuido
+
+- Contrato `RateLimiter` desacoplado.
+- Backend em memoria para desenvolvimento.
+- Backend Redis opcional com fallback em memoria.
+- Profile Docker `redis` com volume e health check.
+- Testes unitarios e integracao Redis opt-in via `REDIS_URL`.
+
+#### Sprint 7: Interface web
+
+- Chat local servido em `/`.
+- Selecao e refresh de modelos.
+- Streaming SSE opcional.
+- Historico local limitado a 100 mensagens.
+- Exportacao local em JSON.
+- Preferencias locais de modelo e streaming.
+- Metricas operacionais na interface.
+- Atualizacao automatica de health, modelos e metricas.
+
+#### Sprint 8: Metricas operacionais
+
+- Tokens por modelo e tipo (`prompt`/`completion`).
+- Erros por rota e status HTTP.
+- Taxa de erro exibida na interface.
+
+### Proximas sprints
+
+#### Sprint 9: Performance e testes avancados
+
+- Testes de carga e concorrencia.
+- Testes de streaming e timeout.
+- Relatorios de performance.
+- Otimizacao de pool HTTP e uso de memoria.
+
+#### Sprint 10: Providers alternativos
+
+- Testes de conformidade do contrato `LLMProvider`.
+- Provider para LM Studio ou vLLM.
+- Selecao de provider por ambiente.
+- Fallback entre providers.
+
+#### Sprint 11: Deploy e operacao de producao
+
+- Pipeline de CD.
+- Registry de imagens e versionamento.
+- Ambientes de staging e producao.
+- Rollback automatizado.
+- TLS via reverse proxy.
+- Gestao externa de secrets.
+- Grafana, alertas e tracing distribuido.
 
 ## Testes
 
@@ -354,6 +423,13 @@ Executar testes localmente:
 ```bash
 pip install -r requirements.txt
 pytest -q
+```
+
+O teste de integracao Redis e opt-in. Para executa-lo contra um Redis acessivel:
+
+```powershell
+$env:REDIS_URL="redis://localhost:6379/0"
+pytest tests/integration/test_redis_integration.py -q
 ```
 
 ## CI
