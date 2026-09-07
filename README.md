@@ -468,26 +468,14 @@ Implementado:
 - Selecao de provider por ambiente.
 - Fallback configuravel entre providers, com protecao contra retry apos inicio do streaming.
 
-#### Sprint 11: Deploy e operacao de producao
+#### Sprint 11: Operacao local e observabilidade
 
-Implementado parcialmente:
+Implementado:
 
-- Workflow de release em `.github/workflows/release.yml`.
-- Publicacao automatica de imagens no GHCR para tags `v*`.
-- Tags versionadas e tag `latest`.
-- Health check da imagem Docker na CI.
-- Instrumentacao OpenTelemetry opcional com exportacao OTLP.
-
-Pendente:
-
-- Deploy automatizado dos ambientes de staging e producao.
-- Rollback automatizado.
-- Gestao externa de secrets.
-- Gestao operacional do collector de tracing.
-
-O Compose de producao e o reverse proxy Caddy ja estao versionados em `deploy/`.
-O deploy ainda requer DNS, armazenamento dos secrets e uma plataforma para
-automatizar promocao, rollback e monitoramento externo.
+- CI local com compilacao, Ruff, mypy, testes, cobertura e smoke check Docker.
+- Docker Compose para API, Ollama, Redis, Prometheus e Grafana.
+- OpenTelemetry opcional com Collector e Jaeger locais.
+- Dashboard operacional e dashboard de traces provisionados no Grafana.
 
 Tracing distribuido e opcional. Para exportar spans para um collector OTLP:
 
@@ -522,128 +510,39 @@ Jaeger fica disponivel em `http://localhost:16686` e o dashboard de traces e
 provisionado no Grafana. O collector recebe OTLP por gRPC em `4317` e HTTP em
 `4318`.
 
-### Sprints restantes
+### Proximas etapas locais
 
-#### Sprint 12: Deploy automatizado de staging
+#### Sprint local 1: Execucao reproducivel
 
-Implementado parcialmente:
+- Instalar Python 3.12, Docker e Docker Compose.
+- Criar `.env` a partir de `.env.example`.
+- Subir a API e Ollama com `docker compose up --build -d`.
+- Baixar e validar o modelo padrao.
+- Exercitar `/health`, `/docs`, `/v1/models` e `/ask`.
 
-- Workflow manual e por tag em `.github/workflows/deploy-staging.yml`.
-- Deploy remoto por SSH com GitHub Environment `staging`.
-- Validacao do Compose, pull da imagem, rollout e smoke test de liveness.
-- Scripts de deploy e rollback em `deploy/scripts/`.
+**Criterio de conclusao:** uma maquina nova consegue subir a aplicacao local e
+executar uma inferencia seguindo apenas o README.
 
-- Configurar no Environment `staging` os secrets `STAGING_HOST`, `STAGING_USER`,
-  `STAGING_SSH_KEY` e `STAGING_DEPLOY_PATH`.
-- Provisionar no host remoto `.env.production` e
-  `secrets/allowed_api_keys` sem versiona-los.
-- Garantir Docker, Compose, `curl`, DNS e portas necessarias no host.
+#### Sprint local 2: Observabilidade local
 
-**Criterio de conclusao:** uma tag de release consegue promover a imagem para
-staging e falha automaticamente se o health check ou o smoke test falhar.
+- Subir os profiles `redis`, `monitoring` e `tracing` quando desejado.
+- Validar Prometheus, Grafana, Jaeger e o dashboard de traces.
+- Correlacionar `X-Request-Id`, logs, metricas e spans.
+- Registrar um benchmark JSON local de health e streaming.
 
-#### Sprint 13: Deploy de producao e rollback
+**Criterio de conclusao:** uma requisicao local pode ser investigada de ponta a
+ponta sem qualquer servico externo.
 
-Implementado parcialmente:
+#### Sprint local 3: Validacao e portfolio
 
-- Workflow manual de producao em `.github/workflows/deploy-production.yml`.
-- Promocao exige o ID de uma execucao de staging bem-sucedida para a mesma tag.
-- Workflow manual de rollback em `.github/workflows/rollback-production.yml`.
-- GitHub Environment `production` usado como barreira de aprovacao.
-- Rollback para `.previous-image-tag` sem rebuild da imagem.
-- Smoke tests e artefatos de logs em deploy e rollback.
+- Executar Ruff, mypy e pytest.
+- Executar benchmark com Ollama ativo e registrar p95/p99, throughput, TTFB e memoria.
+- Testar fallback com provider alternativo local.
+- Capturar screenshots da UI, Grafana e Jaeger.
+- Atualizar o checklist local em `docs/production-readiness-checklist.md`.
 
-- Configurar no Environment `production` os secrets `PRODUCTION_HOST`,
-  `PRODUCTION_USER`, `PRODUCTION_SSH_KEY` e `PRODUCTION_DEPLOY_PATH`.
-- Configurar aprovadores obrigatorios e branch protection no Environment.
-- Promover somente tags ja validadas em staging.
-
-Pendencias da sprint:
-
-- Configurar aprovacao manual e branch protection no GitHub Environment.
-- Informar o `staging_run_id` aprovado ao iniciar o workflow de producao.
-
-**Criterio de conclusao:** uma promocao aprovada pode ser revertida para a ultima
-versao saudavel sem rebuild da imagem.
-
-#### Sprint 14: Gestao externa de secrets
-
-- Validacao remota de existencia, formato e permissoes do arquivo de API keys.
-- Deploy e rollback falham antes do rollout quando o secret esta vazio ou exposto.
-- Chaves continuam fora da imagem, do repositorio e dos logs do workflow.
-
-- Escolher o backend de secrets da infraestrutura (GitHub Environment, Vault,
-  cloud secret manager ou equivalente).
-- Remover secrets reais de arquivos locais e variaveis expostas no workflow.
-- Montar `ALLOWED_API_KEYS` via secret file no deploy.
-- Rotacionar API keys sem alterar a imagem publicada.
-- Validar que logs, artefatos e mensagens de erro nunca exibem secrets.
-
-**Criterio de conclusao:** o deploy funciona sem secrets versionados e permite
-rotacao controlada das chaves.
-
-#### Sprint 15: Operacao de tracing e observabilidade
-
-- Provisionar collector OTLP e backend de traces por ambiente.
-- Adicionar dashboard de latencia, erros, provider e correlation ID.
-- Criar alertas para falha de exportacao, erro elevado e latencia p95.
-- Documentar retencao, custo, amostragem e troubleshooting.
-- Validar correlação entre `X-Request-Id`, logs, métricas e traces.
-
-**Criterio de conclusao:** uma requisição de staging pode ser localizada de ponta
-a ponta nos logs, metricas e traces.
-
-#### Sprint 16: Validação final de produção
-
-Implementado parcialmente:
-
-- Workflow manual de validação em `.github/workflows/validate-production.yml`.
-- Checks de liveness, readiness e endpoint autenticado.
-- Relatórios JSON de benchmark publicados como artefatos.
-- Checklist de go-live em `docs/production-readiness-checklist.md`.
-
-Pendências da sprint:
-
-- Executar o workflow contra ambientes reais.
-- Anexar os resultados aprovados ao release.
-
-**Criterio de conclusao:** os limites operacionais estão medidos, documentados e
-aprovados para o ambiente de produção.
-
-#### Sprint 17: Ativacao final e encerramento
-
-Esta sprint consolida tudo que ainda depende de infraestrutura e evidencia
-operacional antes de declarar o projeto pronto para producao.
-
-**Configuracao de infraestrutura**
-
-- Criar e proteger os GitHub Environments `staging` e `production`.
-- Configurar aprovadores, branch protection e secrets SSH dos dois ambientes.
-- Provisionar hosts com Docker Compose, DNS, portas 80/443 e armazenamento persistente.
-- Configurar o backend externo de secrets e a rotina de rotacao de API keys.
-- Provisionar collector OTLP, backend de traces, dashboards, alertas e retencao.
-
-**Execucao controlada**
-
-- Executar deploy de uma tag em staging.
-- Validar liveness, readiness, autenticacao, TLS, fallback e logs sem vazamento.
-- Executar benchmark real de health, chat e streaming com cada provider disponivel.
-- Registrar throughput, p95/p99, primeiro byte, memoria e limites de concorrencia.
-- Executar um rollback em staging e confirmar a versao anterior saudavel.
-- Promover a mesma imagem aprovada para production com aprovacao manual.
-- Executar validacao pos-deploy e um exercicio de rollback em production.
-
-**Evidencias e encerramento**
-
-- Anexar relatorios de benchmark, logs e resultados dos workflows ao release.
-- Preencher `docs/production-readiness-checklist.md`.
-- Confirmar correlacao entre `X-Request-Id`, logs, metricas e traces.
-- Registrar imagem, digest, configuracoes, responsaveis e plano de incidente.
-- Atualizar o roadmap removendo as pendencias somente apos todas as evidencias.
-
-**Criterio de conclusao:** staging e production foram executados com a mesma
-imagem aprovada, rollback foi exercitado, secrets e traces estao operacionais,
-e o checklist de go-live esta completo e anexado ao release.
+**Criterio de conclusao:** a aplicacao funciona offline, possui evidencias de
+qualidade e esta pronta para ser apresentada como projeto local-first.
 
 Configuracao Prometheus e regras iniciais estao versionadas em `monitoring/prometheus/`:
 

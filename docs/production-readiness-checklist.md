@@ -1,45 +1,52 @@
-# Production readiness checklist
+# Checklist de prontidao local
 
-Use this checklist before promoting a release.
+## Execucao
 
-## Access and deployment
+- [ ] Python 3.12 e Docker Compose estao instalados.
+- [ ] `.env` foi criado a partir de `.env.example`.
+- [ ] `docker compose config --quiet` passa.
+- [ ] API e Ollama sobem com `docker compose up --build -d`.
+- [ ] `/health/live` retorna 200.
+- [ ] `/health/ready` retorna 200 com o modelo instalado.
+- [ ] `/docs` e a interface web carregam.
 
-- [ ] `staging` and `production` GitHub Environments have required approvers.
-- [ ] SSH host keys are pinned or verified outside the workflow.
-- [ ] `STAGING_*` and `PRODUCTION_*` secrets are configured.
-- [ ] The target host has Docker Compose, curl, DNS, and ports 80/443 ready.
-- [ ] `.env.production` and `secrets/allowed_api_keys` exist only on the target host.
-- [ ] The deployed `IMAGE_TAG` is immutable and was validated in staging.
+## Funcionalidade
 
-## Security
+- [ ] `/v1/models` lista os modelos instalados.
+- [ ] Chat normal funciona.
+- [ ] Chat com streaming SSE funciona.
+- [ ] Embeddings funcionam.
+- [ ] `/ask` funciona.
+- [ ] Troca de provider local foi validada quando disponivel.
+- [ ] Fallback local foi exercitado quando configurado.
 
-- [ ] API keys use file permissions 400 or 600.
-- [ ] Anonymous requests are disabled.
-- [ ] CORS contains only approved origins.
-- [ ] TLS certificate issuance and renewal succeed.
-- [ ] No secret appears in workflow logs or uploaded artifacts.
+## Seguranca local
 
-## Reliability
+- [ ] API keys nao estao versionadas.
+- [ ] `ALLOW_ANONYMOUS_REQUESTS` esta adequado ao objetivo local.
+- [ ] CORS esta restrito quando a interface esta separada.
+- [ ] Limite de payload e rate limiting foram testados.
+- [ ] Logs nao exibem chaves originais.
 
-- [ ] `/health/live` returns 200.
-- [ ] `/health/ready` returns 200 with the expected model available.
-- [ ] Authenticated `/v1/models` returns 200.
-- [ ] Provider fallback behavior has been verified.
-- [ ] Rollback was tested in staging and the previous tag is recorded.
+## Observabilidade
 
-## Performance and observability
+- [ ] Prometheus coleta `/metrics`.
+- [ ] Grafana carrega o dashboard operacional.
+- [ ] Jaeger recebe traces quando o profile `tracing` esta ativo.
+- [ ] Logs, metricas e traces podem ser correlacionados por `X-Request-Id`.
+- [ ] Alertas locais foram revisados.
 
-- [ ] Health benchmark report is attached to the release.
-- [ ] Inference benchmark report includes throughput, p95/p99, streaming first byte, and memory.
-- [ ] Prometheus targets and alerts are healthy.
-- [ ] OpenTelemetry traces reach the collector and backend.
-- [ ] Logs, metrics, and traces can be correlated by `X-Request-Id`.
+## Performance
 
-## Approval
+- [ ] Ruff, mypy e pytest passam.
+- [ ] Benchmark de health foi executado.
+- [ ] Benchmark de chat/streaming foi executado com modelo ativo.
+- [ ] Throughput, p95/p99, TTFB e memoria foram registrados.
+- [ ] Limites de concorrencia e pool foram documentados.
 
-- Release tag:
-- Image digest:
-- Staging validation run:
-- Production validation run:
-- Rollback owner:
-- Approval:
+## Portfolio
+
+- [ ] README explica arquitetura e como executar localmente.
+- [ ] Screenshots da UI, Grafana e Jaeger foram capturadas.
+- [ ] Um relatorio JSON de benchmark foi preservado.
+- [ ] O fluxo offline e a privacidade local estao destacados.

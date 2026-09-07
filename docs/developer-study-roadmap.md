@@ -292,9 +292,9 @@ enhancement`, `responsive UI`, `accessibility`, `error boundary`.
 
 - `Dockerfile`
 - `docker-compose.yml`
-- `deploy/docker-compose.production.yml`
-- `deploy/Caddyfile`
-- `deploy/.env.production.example`
+- `docker-compose.yml`
+- `Dockerfile`
+- `.env.example`
 
 ### Termos tecnicos
 
@@ -306,28 +306,20 @@ enhancement`, `responsive UI`, `accessibility`, `error boundary`.
 
 ### O que estudar
 
-- GitHub Actions jobs, steps, artifacts e environments.
+- GitHub Actions jobs, steps e quality gates.
 - Quality gates: Ruff, mypy, pytest e coverage.
-- Deploy via SSH e host key verification.
-- Manual approval e branch protection.
-- Rollout, rollback e previous known-good version.
-- Smoke tests e post-deploy validation.
+- Build reproducivel e validacao local.
+- Smoke tests e benchmark pos-startup.
 
 ### Onde observar
 
 - `.github/workflows/ci.yml`
-- `.github/workflows/release.yml`
-- `.github/workflows/deploy-staging.yml`
-- `.github/workflows/deploy-production.yml`
-- `.github/workflows/rollback-production.yml`
-- `.github/workflows/validate-production.yml`
-- `deploy/scripts/`
 - `docs/production-readiness-checklist.md`
 
 ### Termos tecnicos
 
-`CI/CD`, `quality gate`, `artifact`, `GitHub Environment`, `deployment approval`,
-`rolling deployment`, `rollback`, `smoke test`, `known-good release`, `runbook`.
+`CI`, `quality gate`, `artifact`, `Docker build`, `smoke test`, `benchmark`,
+`runbook`, `reproducible environment`.
 
 ## O que ja esta implementado
 
@@ -340,17 +332,15 @@ enhancement`, `responsive UI`, `accessibility`, `error boundary`.
 - UI web local.
 - Prometheus, Grafana e alertas basicos.
 - OpenTelemetry opcional com Collector e Jaeger local.
-- CI, release no GHCR, staging e workflows de producao.
+- CI, Docker Compose local e validacao automatizada.
 - Benchmark de performance e checklist de go-live.
 
-## O que ainda depende de infraestrutura real
+## O que ainda precisa ser validado localmente
 
-- Configuracao dos GitHub Environments e secrets.
-- Hosts remotos, DNS, TLS e armazenamento persistente.
-- Backend externo de secrets e rotacao operacional.
-- Backend de traces e politica de retencao.
-- Execucao de benchmarks reais com modelos ativos.
-- Aprovacao de producao, exercicio de rollback e evidencia do go-live.
+- Download dos modelos no Ollama.
+- Execucao dos profiles Redis, monitoring e tracing.
+- Benchmarks de inferencia com modelos ativos.
+- Screenshots e relatorios para o portfolio.
 
 ## Projeto final sugerido
 
@@ -360,5 +350,5 @@ Depois de estudar as etapas, o desenvolvedor junior deve conseguir:
 2. Implementar um provider compatibilizado pelo contrato `LLMProvider`.
 3. Diagnosticar uma falha usando logs, metricas e traces.
 4. Ajustar concorrencia e pool com base em p95 e throughput.
-5. Preparar uma imagem versionada e executar um deploy de staging.
-6. Executar smoke test, analisar artefatos e realizar rollback controlado.
+5. Subir os profiles locais e interpretar metricas e traces.
+6. Executar benchmark, analisar resultados e documentar a capacidade local.
