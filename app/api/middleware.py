@@ -113,7 +113,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' https://cdn.jsdelivr.net"
+        script_sources = "'self' https://cdn.jsdelivr.net"
+        if request.url.path == "/docs":
+            script_sources += " 'unsafe-inline'"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "img-src 'self' data: https://fastapi.tiangolo.com; "
+            "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            f"script-src {script_sources}; "
+            "connect-src 'self' https://cdn.jsdelivr.net"
+        )
         return response
 
 

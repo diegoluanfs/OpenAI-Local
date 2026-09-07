@@ -15,7 +15,10 @@ def test_web_interface_is_served():
     assert response.status_code == 200
     assert "Local LLM" in response.text
     assert response.headers["x-content-type-options"] == "nosniff"
-    assert "https://cdn.jsdelivr.net" in response.headers["content-security-policy"]
+    content_security_policy = response.headers["content-security-policy"]
+    assert "https://cdn.jsdelivr.net" in content_security_policy
+    assert "img-src 'self' data: https://fastapi.tiangolo.com" in content_security_policy
+    assert "connect-src 'self' https://cdn.jsdelivr.net" in content_security_policy
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["referrer-policy"] == "no-referrer"
     assert stylesheet.status_code == 200
@@ -29,6 +32,18 @@ def test_web_interface_is_served():
     assert "maxStoredMessages = 100" in script.text
     assert "setInterval" in script.text
     assert "15000" in script.text
+
+
+def test_swagger_assets_are_allowed_only_on_docs_route():
+    app = create_app(Settings(auto_pull_default_model=False))
+
+    with TestClient(app) as client:
+        docs_response = client.get("/docs")
+        web_response = client.get("/")
+
+    assert docs_response.status_code == 200
+    assert "'unsafe-inline'" in docs_response.headers["content-security-policy"]
+    assert "'unsafe-inline'" not in web_response.headers["content-security-policy"]
 
 
 def test_metrics_endpoint_is_prometheus_compatible():
