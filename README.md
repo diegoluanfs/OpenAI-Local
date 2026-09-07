@@ -65,6 +65,9 @@ cp .env.example .env
 docker compose up --build
 ```
 
+Para o passo a passo completo de clone, configuracao, execucao, testes,
+benchmark e troubleshooting, consulte [docs/local-development-guide.md](docs/local-development-guide.md).
+
 ## Configuracao
 
 Variaveis suportadas:

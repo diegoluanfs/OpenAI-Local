@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", extra="ignore")
 
     app_env: Literal["development", "test", "staging", "production"] = "development"
     app_name: str = "Local LLM Server"
@@ -106,4 +106,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings(_env_file=".env")  # type: ignore[call-arg]
