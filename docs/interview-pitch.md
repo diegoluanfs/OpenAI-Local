@@ -1,0 +1,231 @@
+# Manual de apresentacao: OpenAI Local
+
+## 1. Pitch principal
+
+Eu desenvolvi uma plataforma local de inferencia de modelos de linguagem compativel com a API da OpenAI. A aplicacao permite que outros sistemas consumam modelos locais sem alterar sua integracao: basta apontar o `base_url` para o servidor local.
+
+O backend foi construido com FastAPI e Clean Architecture, separando dominio, servicos, infraestrutura e camada HTTP. A plataforma suporta chat completions, completions, embeddings, streaming via Server-Sent Events e gerenciamento de modelos.
+
+A aplicacao possui uma abstracao de providers que permite utilizar Ollama, LM Studio e vLLM. Tambem implementei fallback entre providers, evitando repetir uma resposta quando um stream ja comecou.
+
+Alem da funcionalidade principal, tratei requisitos reais de operacao: autenticacao por API key, allowlist, CORS, headers de seguranca, limite de payload, rate limiting, Redis opcional, timeouts por operacao, cache de modelos, pool HTTP e limite de concorrencia.
+
+A observabilidade inclui logs estruturados com correlation ID, metricas Prometheus, dashboards e alertas Grafana, alem de tracing distribuido opcional com OpenTelemetry, Collector e Jaeger.
+
+Para qualidade, implementei testes unitarios, testes de integracao, testes de contrato dos providers, testes de concorrencia, streaming e benchmark com throughput, p95, p99, tempo ate o primeiro byte e memoria.
+
+O projeto roda localmente via Docker Compose e, depois do download dos modelos, pode ser utilizado offline, priorizando privacidade e controle dos dados.
+
+## 2. Versao curta
+
+> E um servidor local de LLMs compativel com a API da OpenAI, construido com FastAPI e Clean Architecture. Ele suporta multiplos providers, fallback, streaming, embeddings, autenticacao, Redis, metricas, Grafana, tracing e benchmarks. O foco e privacidade, extensibilidade e operacao reproduzivel via Docker Compose.
+
+## 3. Mensagem principal
+
+> Eu nao construi apenas um chatbot. Construi uma plataforma local de inferencia que outras aplicacoes podem consumir, observar, testar e operar.
+
+## 4. Demonstracao na entrevista
+
+### Passo 1: Subir a aplicacao
+
+```bash
+docker compose --profile monitoring --profile tracing up --build -d
+```
+
+Esse comando sobe a API, Ollama, Prometheus, Grafana, Jaeger e OpenTelemetry Collector. Para conferir os containers:
+
+```bash
+docker compose ps
+```
+
+Os servicos esperados sao `local-llm-server`, `ollama`, `local-llm-prometheus`, `local-llm-grafana`, `local-llm-jaeger` e `local-llm-otel-collector`.
+
+### Passo 2: Gerar e configurar uma API key
+
+No PowerShell do Windows:
+
+```powershell
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$bytes = New-Object byte[] 32
+$rng.GetBytes($bytes)
+$key = ([BitConverter]::ToString($bytes)).Replace("-", "").ToLowerInvariant()
+$rng.Dispose()
+$key
+```
+
+No Linux/macOS:
+
+```bash
+openssl rand -hex 32
+```
+
+Ou com Python:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Copie o valor gerado para o arquivo `.env`:
+
+```env
+API_KEY=sua-chave-local
+ALLOWED_API_KEYS=sua-chave-local
+```
+
+Depois de alterar o `.env`, recrie a API:
+
+```bash
+docker compose up --build -d local-llm-server
+```
+
+Use a mesma chave no cliente, no Swagger ou na interface web. Nao versione nem compartilhe o arquivo `.env`.
+
+### Passo 3: Verificar os servicos
+
+```bash
+docker compose ps
+curl http://localhost:8000/health/live
+curl http://localhost:8000/health/ready
+```
+
+### Passo 4: Mostrar a documentacao da API
+
+```text
+http://localhost:8000/docs
+```
+
+### Passo 5: Fazer uma chamada compativel com OpenAI
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key="sua-chave-local",
+)
+
+response = client.chat.completions.create(
+    model="llama3.2:3b",
+    messages=[
+        {"role": "user", "content": "Explique o projeto em uma frase."}
+    ],
+)
+
+print(response.choices[0].message.content)
+```
+
+### Passo 6: Mostrar observabilidade
+
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000
+- Jaeger: http://localhost:16686
+- Metricas: http://localhost:8000/metrics
+
+No Grafana, use `admin`/`admin` no primeiro acesso e abra a pasta `Local LLM`. Mostre o dashboard operacional e o dashboard `Local LLM Traces`. No Jaeger, selecione o servico `local-llm-server` para visualizar os spans.
+
+Para mostrar os logs durante a demonstracao:
+
+```bash
+docker compose logs -f local-llm-server ollama
+```
+
+## 5. Arquitetura
+
+```text
+Cliente externo
+      |
+      v
+FastAPI / OpenAI-compatible API
+      |
+      v
+Routes -> Services -> LLMProvider
+                     |
+         +-----------+-----------+
+         |           |           |
+       Ollama     LM Studio     vLLM
+```
+
+Infraestrutura adicional:
+
+- Redis: rate limiting distribuido
+- Prometheus: metricas
+- Grafana: dashboards e alertas
+- Jaeger: visualizacao de traces
+- Ollama: execucao local dos modelos
+
+## 6. Principais decisoes tecnicas
+
+- API compativel com OpenAI para facilitar a integracao com outros sistemas.
+- Clean Architecture para separar regras de negocio de detalhes de infraestrutura.
+- Protocol/adapter para permitir diferentes providers.
+- Normalizacao de respostas de Ollama e APIs OpenAI-compatible.
+- Fallback somente em falhas de disponibilidade.
+- Sem retry depois do primeiro chunk de streaming para evitar resposta duplicada.
+- Cache com TTL para reduzir chamadas repetidas de listagem de modelos.
+- Timeouts diferentes para chat, completions, embeddings, tags e pull.
+- Semaphore para limitar inferencias simultaneas.
+- Redis opcional para compartilhar rate limiting entre processos.
+- API keys nunca sao exibidas nos logs; apenas fingerprints sao registradas.
+- Docker Compose para tornar a execucao local reproduzivel.
+
+## 7. Termos tecnicos para explicar
+
+- **FastAPI:** framework web Python baseado em ASGI.
+- **ASGI:** interface assincrona entre servidor e aplicacao Python.
+- **Clean Architecture:** organizacao por camadas e regras de dependencia.
+- **Dependency Injection:** fornecimento de dependencias sem acoplamento direto.
+- **Repository Pattern:** abstracao para acesso e persistencia de dados.
+- **Adapter Pattern:** conversao entre contratos diferentes.
+- **Protocol:** contrato estrutural para implementacoes de providers.
+- **SSE:** Server-Sent Events usados para streaming HTTP.
+- **AsyncIO:** modelo de concorrencia assincrona do Python.
+- **Semaphore:** limite de tarefas concorrentes.
+- **Connection pool:** reutilizacao de conexoes HTTP.
+- **TTL:** tempo de validade de uma entrada de cache.
+- **Rate limiting:** controle de quantidade de requisicoes.
+- **Liveness:** indica que o processo esta vivo.
+- **Readiness:** indica que o processo esta pronto para atender.
+- **Prometheus:** armazenamento e consulta de metricas.
+- **Grafana:** dashboards e visualizacao de metricas.
+- **OpenTelemetry:** instrumentacao de traces e metricas.
+- **OTLP:** protocolo de envio de telemetria.
+- **Span:** unidade de trabalho dentro de um trace.
+- **p95/p99:** percentis de latencia.
+- **TTFB:** tempo ate o primeiro byte recebido.
+- **Docker Compose:** orquestracao local de multiplos containers.
+
+## 8. Desafio principal do projeto
+
+O principal desafio foi manter uma interface compativel com OpenAI enquanto os providers possuem APIs, formatos de resposta e capacidades diferentes.
+
+A solucao foi criar uma abstracao `LLMProvider`, implementar adapters para cada tipo de provider e normalizar as respostas antes que elas chegassem ao servico principal. Assim, o restante da aplicacao nao precisa conhecer os detalhes do Ollama, LM Studio ou vLLM.
+
+## 9. Perguntas que podem surgir
+
+### Por que executar localmente?
+
+Para manter privacidade, reduzir dependencia de servicos externos, permitir uso offline e controlar o ambiente de inferencia.
+
+### Por que compatibilidade com OpenAI?
+
+Porque muitas bibliotecas ja suportam o SDK da OpenAI. Alterar apenas o `base_url` permite reutilizar clientes existentes.
+
+### Por que usar fallback?
+
+Para manter disponibilidade quando o provider principal estiver indisponivel. O fallback e restrito a falhas de disponibilidade e nao repete streams parcialmente transmitidos.
+
+### Como voce mede performance?
+
+Com metricas Prometheus e um benchmark proprio que mede throughput, falhas, latencia, p95, p99, tempo ate o primeiro byte e memoria.
+
+### Como voce protege a API?
+
+Com API keys, allowlist, rate limiting, limite de payload, CORS configuravel, headers de seguranca e logs sem exposicao dos segredos.
+
+### Como voce investigaria uma falha?
+
+Comecaria pelo health check, depois verificaria logs estruturados, correlation ID, metricas Prometheus e traces no Jaeger. Em seguida analisaria provider, timeout, concorrencia e disponibilidade do modelo.
+
+## 10. Fechamento
+
+Este projeto demonstra mais do que uma integracao com um modelo de IA. Ele demonstra como construir, organizar, proteger, observar, testar e operar uma plataforma de inferencia local de forma reproduzivel.
